@@ -45,11 +45,11 @@ namespace WPEFramework
 	    LOGINFO("ctor");
             AudienceIntelligence::_instance = this;
 
-            registerMethod("getLogLevel", &AudienceIntelligence::getLogLevelWrapper, this);
-            registerMethod("setLogLevel", &AudienceIntelligence::setLogLevelWrapper, this);
-            registerMethod("enableLAR", &AudienceIntelligence::enableLAR, this);
-            registerMethod("enableACR", &AudienceIntelligence::enableACR, this);
-            registerMethod("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
+            Register("getLogLevel", &AudienceIntelligence::getLogLevelWrapper, this);
+            Register("setLogLevel", &AudienceIntelligence::setLogLevelWrapper, this);
+            Register("enableLAR", &AudienceIntelligence::enableLAR, this);
+            Register("enableACR", &AudienceIntelligence::enableACR, this);
+            Register("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
         }
 
 	// Registered methods begin
