@@ -18,6 +18,8 @@
 **/
 
 #include "AudienceIntelligence.h"
+#include "UtilsJsonRpc.h"
+#include "UtilsIarm.h"
 #include "utils.h"
 #include <string>
 #include <memory>
@@ -38,7 +40,7 @@ namespace WPEFramework
     {
 
 	AudienceIntelligence::AudienceIntelligence()
-        : AbstractPlugin()
+        : PluginHost::JSONRPC()
         {
 	    LOGINFO("ctor");
             AudienceIntelligence::_instance = this;

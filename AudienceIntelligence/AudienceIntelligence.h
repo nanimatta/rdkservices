@@ -23,13 +23,12 @@
 #include <mutex>
 #include "Module.h"
 #include "utils.h"
-#include "AbstractPlugin.h"
 
 namespace WPEFramework {
 
     namespace Plugin {
 
-        class AudienceIntelligence : public AbstractPlugin {
+        class AudienceIntelligence : public PluginHost::IPlugin, public PluginHost::JSONRPC {
         private:
 
             // We do not allow this plugin to be copied !!
