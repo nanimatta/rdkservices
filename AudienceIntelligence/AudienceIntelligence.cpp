@@ -56,9 +56,7 @@ namespace WPEFramework
             LOGINFOMETHOD();
 	    bool result = true;
             std::string logLevel = "INFO";
-            //lockRdkShellMutex();
-            //result = CompositorController::getLogLevel(logLevel);
-            //gRdkShellMutex.unlock();
+            //todo
             if (false == result) {
                 response["message"] = "failed to get log level";
             }
@@ -80,17 +78,13 @@ namespace WPEFramework
             if (result)
             {
                 std::string logLevel  = parameters["logLevel"].String();
-                std::string currentLogLevel = "INFO";
-                //lockRdkShellMutex();
-                //result = CompositorController::setLogLevel(logLevel);
-                //CompositorController::getLogLevel(currentLogLevel);
-                //gRdkShellMutex.unlock();
+                //todo
                 if (false == result) {
                     response["message"] = "failed to set log level";
                 }
                 else
                 {
-                    response["logLevel"] = currentLogLevel;
+                    response["logLevel"] = logLevel;
                 }
             }
 	}
