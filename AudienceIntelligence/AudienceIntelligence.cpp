@@ -43,13 +43,51 @@ namespace WPEFramework
         : PluginHost::JSONRPC()
         {
 	    LOGINFO("ctor");
-            AudienceIntelligence::_instance = this;
 
             Register("getLogLevel", &AudienceIntelligence::getLogLevelWrapper, this);
             Register("setLogLevel", &AudienceIntelligence::setLogLevelWrapper, this);
             Register("enableLAR", &AudienceIntelligence::enableLAR, this);
             Register("enableACR", &AudienceIntelligence::enableACR, this);
             Register("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
+        }
+
+	const string AudienceIntelligence::Initialize(PluginHost::IShell* service)
+        {
+	    LOGWARN("Initlaizing AudienceIntelligence");
+            AudienceIntelligence::_instance = this;
+            InitializeIARM();
+            return (string());
+        }
+
+	void AudienceIntelligence::Deinitialize(PluginHost::IShell * /* service */)
+        {
+	    LOGWARN("DeInitlaizing AudienceIntelligence");
+            DeinitializeIARM();
+            AudienceIntelligence::_instance = nullptr;
+        }
+
+        string AudienceIntelligence::Information() const
+        {
+            return (string());
+        }
+
+	void AudienceIntelligence::InitializeIARM()
+        {
+           LOGWARN("AudienceIntelligence::InitializeIARM");
+	   if(Utils::IARM::init())
+            {
+                    IARM_Result_t res;
+            }
+        }
+
+       void AudienceIntelligence::DeinitializeIARM()
+        {
+           LOGWARN("AudienceIntelligence::DeinitializeIARM");
+	   if(Utils::IARM::isConnected())
+            {
+                    IARM_Result_t res;
+            }
+
         }
 
 	// Registered methods begin
@@ -133,15 +171,13 @@ namespace WPEFramework
         }
 
        AudienceIntelligence::~AudienceIntelligence()
-        {
-        }
-
-       void AudienceIntelligence::Deinitialize(PluginHost::IShell* /* service */)
-        {
-            AudienceIntelligence::_instance = nullptr;
-
-        }
-
+       {
+            Unregister("getLogLevel");
+            Unregister("setLogLevel");
+            Unregister("enableLAR");
+            Unregister("enableACR");
+            Unregister("setACRFrequency");
+       }
     } // namespace Plugin
 } // namespace WPEFramework
  

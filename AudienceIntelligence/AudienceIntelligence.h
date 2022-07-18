@@ -19,8 +19,6 @@
 
 #pragma once
 
-#include <thread>
-#include <mutex>
 #include "Module.h"
 #include "utils.h"
 
@@ -47,13 +45,18 @@ namespace WPEFramework {
             
 	    //End events
 
+	protected:
+            void InitializeIARM();
+            void DeinitializeIARM();
+
         public:
             AudienceIntelligence();
             virtual ~AudienceIntelligence();
-            virtual void Deinitialize(PluginHost::IShell* service) override;
 
-        public:
             static AudienceIntelligence* _instance;
+            virtual const string Initialize(PluginHost::IShell* service) override;
+            virtual void Deinitialize(PluginHost::IShell* service) override;
+            virtual string Information() const override;
         };
 	} // namespace Plugin
 } // namespace WPEFramework
