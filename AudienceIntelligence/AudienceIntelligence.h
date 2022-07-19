@@ -20,7 +20,6 @@
 #pragma once
 
 #include "Module.h"
-#include "utils.h"
 
 namespace WPEFramework {
 
@@ -57,6 +56,12 @@ namespace WPEFramework {
             virtual const string Initialize(PluginHost::IShell* service) override;
             virtual void Deinitialize(PluginHost::IShell* service) override;
             virtual string Information() const override;
+
+            BEGIN_INTERFACE_MAP(AudienceIntelligence)
+            INTERFACE_ENTRY(PluginHost::IPlugin)
+            INTERFACE_ENTRY(PluginHost::IDispatcher)
+            END_INTERFACE_MAP
+
         };
 	} // namespace Plugin
 } // namespace WPEFramework
