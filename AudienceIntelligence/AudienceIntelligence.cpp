@@ -18,9 +18,10 @@
 **/
 
 #include "AudienceIntelligence.h"
+
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
-#include "utils.h"
+
 #include <string>
 #include <memory>
 #include <iostream>
@@ -31,6 +32,10 @@
 #include <unistd.h>
 #include <syscall.h>
 
+#define API_VERSION_NUMBER_MAJOR 1
+#define API_VERSION_NUMBER_MINOR 0
+#define API_VERSION_NUMBER_PATCH 0
+
 bool ACRModeEnabled = false;
 bool LARModeEnabled = false;
 
@@ -38,6 +43,9 @@ namespace WPEFramework
 {
     namespace Plugin
     {
+
+	SERVICE_REGISTRATION(AudienceIntelligence, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
+	AudienceIntelligence* AudienceIntelligence::_instance = nullptr;
 
 	AudienceIntelligence::AudienceIntelligence()
         : PluginHost::JSONRPC()
