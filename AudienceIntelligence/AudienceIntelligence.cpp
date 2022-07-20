@@ -52,8 +52,8 @@ namespace WPEFramework
         {
 	    LOGINFO("ctor");
 
-            Register("getLogLevel", &AudienceIntelligence::getLogLevelWrapper, this);
-            Register("setLogLevel", &AudienceIntelligence::setLogLevelWrapper, this);
+            Register("getLogLevel", &AudienceIntelligence::getLogLevel, this);
+            Register("setLogLevel", &AudienceIntelligence::setLogLevel, this);
             Register("enableLAR", &AudienceIntelligence::enableLAR, this);
             Register("enableACR", &AudienceIntelligence::enableACR, this);
             Register("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
@@ -99,7 +99,7 @@ namespace WPEFramework
         }
 
 	// Registered methods begin
-        uint32_t AudienceIntelligence::getLogLevelWrapper(const JsonObject& parameters, JsonObject& response)
+        uint32_t AudienceIntelligence::getLogLevel(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
 	    bool result = true;
@@ -114,7 +114,7 @@ namespace WPEFramework
             returnResponse(result);
         }
         
-	uint32_t AudienceIntelligence::setLogLevelWrapper(const JsonObject& parameters, JsonObject& response)
+	uint32_t AudienceIntelligence::setLogLevel(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
 	    bool result = true;
@@ -142,17 +142,21 @@ namespace WPEFramework
             LOGINFOMETHOD();
 	    bool result = true;
 
-            if (!parameters.HasLabel("enableACR"))
+            if (!parameters.HasLabel("enable"))
             {
                 result = false;
                 response["message"] = "please specify enable parameter";
             }
             if (result)
             {
-                const bool enable  = parameters["enableACR"].Boolean();
-                ACRModeEnabled = result = enable;
+                const bool success  = parameters["enable"].Boolean();
+                ACRModeEnabled = success;
+                    if (success)
+                        response["message"] = "ACR feature enabled";
+                    else
+                        response["message"] = "ACR feature disabled";
             }
-            returnResponse(result);
+            returnResponse(success);
         }
         
 	uint32_t AudienceIntelligence::enableLAR(const JsonObject& parameters, JsonObject& response)
@@ -160,17 +164,21 @@ namespace WPEFramework
             LOGINFOMETHOD();
 	    bool result = true;
 
-            if (!parameters.HasLabel("enableLAR"))
+            if (!parameters.HasLabel("enable"))
             {
                 result = false;
                 response["message"] = "please specify enable parameter";
             }
             if (result)
             {
-                const bool enable  = parameters["enableLAR"].Boolean();
-                LARModeEnabled = result = enable;
+                const bool success  = parameters["enable"].Boolean();
+                LARModeEnabled = success;
+                    if (success)
+                        response["message"] = "LAR feature enabled";
+                    else
+                        response["message"] = "LAR feature disabled";
             }
-            returnResponse(result);
+            returnResponse(success);
         }
         
 	uint32_t AudienceIntelligence::setACRFrequency(const JsonObject& parameters, JsonObject& response)
