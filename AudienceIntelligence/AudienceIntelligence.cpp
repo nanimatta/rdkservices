@@ -117,15 +117,19 @@ namespace WPEFramework
 	uint32_t AudienceIntelligence::setLogLevel(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
+            LOGWARN("AudienceIntelligence::setLogLevel1");
 	    bool result = true;
             if (!parameters.HasLabel("logLevel"))
             {
+            LOGWARN("AudienceIntelligence::setLogLevel2");
                 result = false;
                 response["message"] = "please specify log level (logLevel = DEBUG/INFO/WARN/ERROR/FATAL)";
             }
+            LOGWARN("AudienceIntelligence::setLogLevel3");
             if (result)
             {
                 std::string logLevel  = parameters["logLevel"].String();
+            LOGWARN("AudienceIntelligence::setLogLevel4");
                 //todo
                 if (false == result) {
                     response["message"] = "failed to set log level";
@@ -135,6 +139,7 @@ namespace WPEFramework
                     response["logLevel"] = logLevel;
                 }
             }
+            LOGWARN("AudienceIntelligence::setLogLevel5");
 	}
         
 	uint32_t AudienceIntelligence::enableACR(const JsonObject& parameters, JsonObject& response)
