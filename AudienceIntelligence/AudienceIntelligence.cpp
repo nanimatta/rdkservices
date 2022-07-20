@@ -149,14 +149,14 @@ namespace WPEFramework
             }
             if (result)
             {
-                const bool success  = parameters["enable"].Boolean();
-                ACRModeEnabled = success;
-                    if (success)
+                const bool status  = parameters["enable"].Boolean();
+                ACRModeEnabled = status;
+                    if (status)
                         response["message"] = "ACR feature enabled";
                     else
                         response["message"] = "ACR feature disabled";
             }
-            returnResponse(success);
+            returnResponse(status);
         }
         
 	uint32_t AudienceIntelligence::enableLAR(const JsonObject& parameters, JsonObject& response)
@@ -171,14 +171,14 @@ namespace WPEFramework
             }
             if (result)
             {
-                const bool success  = parameters["enable"].Boolean();
-                LARModeEnabled = success;
-                    if (success)
+                const bool status  = parameters["enable"].Boolean();
+                LARModeEnabled = status;
+                    if (status)
                         response["message"] = "LAR feature enabled";
                     else
                         response["message"] = "LAR feature disabled";
             }
-            returnResponse(success);
+            returnResponse(status);
         }
         
 	uint32_t AudienceIntelligence::setACRFrequency(const JsonObject& parameters, JsonObject& response)
