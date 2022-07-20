@@ -81,14 +81,10 @@
                         "summary": "`true` to enable or `false` to disable",
                         "type":"boolean",
                         "example": true
-                    },
-		    "success": {
-                        "$ref": "#/definitions/success"
                     }
 		},
 		"required": [
-                    "enable",
-		    "success"
+                    "enable"
                 ]
             },
 	    "result": {
