@@ -33,8 +33,8 @@ namespace WPEFramework {
             AudienceIntelligence& operator=(const AudienceIntelligence&) = delete;
 
             //Begin methods
-            uint32_t getLogLevel(const JsonObject& parameters, JsonObject& response);
-            uint32_t setLogLevelwrap(const JsonObject& parameters, JsonObject& response);
+            uint32_t getLogLevelWrapper(const JsonObject& parameters, JsonObject& response);
+            uint32_t setLogLevelWrapper(const JsonObject& parameters, JsonObject& response);
             uint32_t enableLAR(const JsonObject& parameters, JsonObject& response);
             uint32_t enableACR(const JsonObject& parameters, JsonObject& response);
             uint32_t setACRFrequency(const JsonObject& parameters, JsonObject& response);

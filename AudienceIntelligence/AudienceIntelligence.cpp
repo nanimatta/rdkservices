@@ -52,8 +52,8 @@ namespace WPEFramework
         {
 	    LOGINFO("ctor");
 
-            Register("getLogLevel", &AudienceIntelligence::getLogLevel, this);
-            Register("setLogLevel", &AudienceIntelligence::setLogLevelwrap, this);
+            Register("getLogLevel", &AudienceIntelligence::getLogLevelWrapper, this);
+            Register("setLogLevel", &AudienceIntelligence::setLogLevelWrapper, this);
             Register("enableLAR", &AudienceIntelligence::enableLAR, this);
             Register("enableACR", &AudienceIntelligence::enableACR, this);
             Register("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
@@ -99,7 +99,7 @@ namespace WPEFramework
         }
 
 	// Registered methods begin
-        uint32_t AudienceIntelligence::getLogLevel(const JsonObject& parameters, JsonObject& response)
+        uint32_t AudienceIntelligence::getLogLevelWrapper(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
 	    bool result = true;
@@ -111,37 +111,31 @@ namespace WPEFramework
             else {
                 response["logLevel"] = logLevel;
             }
-            returnResponse(result);
+            return result;
         }
         
-	uint32_t AudienceIntelligence::setLogLevelwrap(const JsonObject& parameters, JsonObject& response)
+	uint32_t AudienceIntelligence::setLogLevelWrapper(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
-            LOGWARN("AudienceIntelligence::setLogLevel1");
 	    bool result = true;
             if (!parameters.HasLabel("level"))
             {
-            LOGWARN("AudienceIntelligence::setLogLevel2");
                 result = false;
                 response["message"] = "please specify log level (level = DEBUG/INFO/WARN/ERROR/FATAL)";
             }
-            LOGWARN("AudienceIntelligence::setLogLevel3");
             if (result)
             {
                 std::string logLevel  = parameters["level"].String();
-            LOGWARN("AudienceIntelligence::setLogLevel4");
                 //todo
                 if (false == result) {
                     response["message"] = "failed to set log level";
-            LOGWARN("AudienceIntelligence::setLogLevel5");
                 }
                 else
                 {
                     response["level"] = logLevel;
-            LOGWARN("AudienceIntelligence::setLogLevel6");
                 }
             }
-            LOGWARN("AudienceIntelligence::setLogLevel7");
+            return result;
 	}
         
 	uint32_t AudienceIntelligence::enableACR(const JsonObject& parameters, JsonObject& response)
@@ -162,7 +156,7 @@ namespace WPEFramework
                     else
                         response["message"] = "ACR feature disabled";
             }
-            returnResponse(ACRModeEnabled);
+            return result;
         }
         
 	uint32_t AudienceIntelligence::enableLAR(const JsonObject& parameters, JsonObject& response)
@@ -183,7 +177,7 @@ namespace WPEFramework
                     else
                         response["message"] = "LAR feature disabled";
             }
-            returnResponse(LARModeEnabled);
+            return result;
         }
         
 	uint32_t AudienceIntelligence::setACRFrequency(const JsonObject& parameters, JsonObject& response)
