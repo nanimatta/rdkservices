@@ -42,7 +42,7 @@
             "result": {
                 "type": "object",
                 "properties": {
-                    "logLevel": {
+                    "level": {
                         "$ref": "#/definitions/logLevel"
                     },
                     "success": {
@@ -50,7 +50,7 @@
                     }
                 },
                 "required": [
-                    "logLevel",
+                    "level",
                     "success"
                 ]
             }
@@ -60,12 +60,16 @@
             "params": {
                 "type":"object",
                 "properties": {
-                    "logLevel": {
+                    "level": {
                         "$ref": "#/definitions/logLevel"
+                    },
+                    "success": {
+                        "$ref": "#/definitions/success"
                     }
                 },
                 "required": [
-                    "logLevel"
+                    "level",
+                    "success"
                 ]
             },
             "result": {

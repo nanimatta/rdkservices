@@ -53,7 +53,7 @@ namespace WPEFramework
 	    LOGINFO("ctor");
 
             Register("getLogLevel", &AudienceIntelligence::getLogLevel, this);
-            Register("setLogLevel", &AudienceIntelligence::setLogLevel, this);
+            Register("setLogLevel", &AudienceIntelligence::setLogLevelwrap, this);
             Register("enableLAR", &AudienceIntelligence::enableLAR, this);
             Register("enableACR", &AudienceIntelligence::enableACR, this);
             Register("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
@@ -114,32 +114,34 @@ namespace WPEFramework
             returnResponse(result);
         }
         
-	uint32_t AudienceIntelligence::setLogLevel(const JsonObject& parameters, JsonObject& response)
+	uint32_t AudienceIntelligence::setLogLevelwrap(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
             LOGWARN("AudienceIntelligence::setLogLevel1");
 	    bool result = true;
-            if (!parameters.HasLabel("logLevel"))
+            if (!parameters.HasLabel("level"))
             {
             LOGWARN("AudienceIntelligence::setLogLevel2");
                 result = false;
-                response["message"] = "please specify log level (logLevel = DEBUG/INFO/WARN/ERROR/FATAL)";
+                response["message"] = "please specify log level (level = DEBUG/INFO/WARN/ERROR/FATAL)";
             }
             LOGWARN("AudienceIntelligence::setLogLevel3");
             if (result)
             {
-                std::string logLevel  = parameters["logLevel"].String();
+                std::string logLevel  = parameters["level"].String();
             LOGWARN("AudienceIntelligence::setLogLevel4");
                 //todo
                 if (false == result) {
                     response["message"] = "failed to set log level";
+            LOGWARN("AudienceIntelligence::setLogLevel5");
                 }
                 else
                 {
-                    response["logLevel"] = logLevel;
+                    response["level"] = logLevel;
+            LOGWARN("AudienceIntelligence::setLogLevel6");
                 }
             }
-            LOGWARN("AudienceIntelligence::setLogLevel5");
+            LOGWARN("AudienceIntelligence::setLogLevel7");
 	}
         
 	uint32_t AudienceIntelligence::enableACR(const JsonObject& parameters, JsonObject& response)
