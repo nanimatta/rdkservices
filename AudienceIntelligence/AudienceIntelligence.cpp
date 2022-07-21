@@ -111,7 +111,7 @@ namespace WPEFramework
             else {
                 response["logLevel"] = logLevel;
             }
-            return result;
+	    returnResponse(result);
         }
         
 	uint32_t AudienceIntelligence::setLogLevelWrapper(const JsonObject& parameters, JsonObject& response)
@@ -135,7 +135,7 @@ namespace WPEFramework
                     response["level"] = logLevel;
                 }
             }
-            return result;
+	    returnResponse(result);
 	}
         
 	uint32_t AudienceIntelligence::enableACR(const JsonObject& parameters, JsonObject& response)
@@ -156,7 +156,7 @@ namespace WPEFramework
                     else
                         response["message"] = "ACR feature disabled";
             }
-            return result;
+	    returnResponse(result);
         }
         
 	uint32_t AudienceIntelligence::enableLAR(const JsonObject& parameters, JsonObject& response)
@@ -177,7 +177,7 @@ namespace WPEFramework
                     else
                         response["message"] = "LAR feature disabled";
             }
-            return result;
+	    returnResponse(result);
         }
         
 	uint32_t AudienceIntelligence::setACRFrequency(const JsonObject& parameters, JsonObject& response)
