@@ -109,7 +109,7 @@ namespace WPEFramework
                 response["message"] = "failed to get log level";
             }
             else {
-                response["logLevel"] = logLevel;
+                response["level"] = logLevel;
             }
 	    returnResponse(result);
         }
