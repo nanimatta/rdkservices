@@ -20,10 +20,23 @@
 #pragma once
 
 #include "Module.h"
-
+#include "ACRClient.h"
 namespace WPEFramework {
 
     namespace Plugin {
+	const string ACR_EVENTS = "com.comcast.acr_events";
+	const string ACRLAR_EVENTS = "AcrLarEvents";
+
+	class AudienceIntelligence;
+        class AudienceIntelligenceListener : public ACRClientEventListener{
+         public:
+                AudienceIntelligenceListener(AudienceIntelligence* audintelligence);
+                ~AudienceIntelligenceListener();
+                virtual void onCLDSignatureEvent(const std::string& event);
+         private:
+                AudienceIntelligence& maudintelligence;
+         };
+
 
         class AudienceIntelligence : public PluginHost::IPlugin, public PluginHost::JSONRPC {
         private:
@@ -38,10 +51,13 @@ namespace WPEFramework {
             uint32_t enableLAR(const JsonObject& parameters, JsonObject& response);
             uint32_t enableACR(const JsonObject& parameters, JsonObject& response);
             uint32_t setACRFrequency(const JsonObject& parameters, JsonObject& response);
-            //End methods
+
+            uint32_t registerListeners(const JsonObject& parameters, JsonObject& response);
+            uint32_t unregisterListeners(const JsonObject& parameters, JsonObject& response);
+
+	    //End methods
 
             //Begin events
-            
 	    //End events
 
 	protected:
@@ -52,7 +68,11 @@ namespace WPEFramework {
             AudienceIntelligence();
             virtual ~AudienceIntelligence();
 
-            static AudienceIntelligence* _instance;
+            void notify(const std::string& event, const JsonObject& parameters);
+            AudienceIntelligenceListener *_acrEventListener;
+            ACRClient *_acrClient;
+	    
+	    static AudienceIntelligence* _instance;
             virtual const string Initialize(PluginHost::IShell* service) override;
             virtual void Deinitialize(PluginHost::IShell* service) override;
             virtual string Information() const override;
