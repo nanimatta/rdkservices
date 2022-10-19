@@ -46,6 +46,10 @@ if(PLUGIN_BLUETOOTH)
     add_subdirectory(Bluetooth)
 endif()
 
+if(PLUGIN_AUDIENCEINTELLIGENCE)
+        add_subdirectory(AudienceIntelligence)
+endif()
+
 if(PLUGIN_DISPLAYSETTINGS)
     add_subdirectory(DisplaySettings)
 endif()
