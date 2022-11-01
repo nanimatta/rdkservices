@@ -42,6 +42,10 @@ if(PLUGIN_PACKAGER)
     add_subdirectory(Packager)
 endif()
 
+if(PLUGIN_AUDIENCEINTLLIGENCE)
+        add_subdirectory(AudienceIntlligence)
+endif()
+
 if(PLUGIN_BLUETOOTH)
     add_subdirectory(Bluetooth)
 endif()
