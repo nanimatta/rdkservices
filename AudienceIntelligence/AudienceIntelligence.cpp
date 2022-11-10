@@ -20,8 +20,6 @@
 #include "AudienceIntelligence.h"
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
-#include "audio_capture_manager.h"
-#include "music_id.h"
 #include <string>
 #include <memory>
 #include <iostream>
@@ -33,6 +31,16 @@
 #include <string.h>
 #include <syscall.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <errno.h>
+#include "safec_lib.h"
+#include "audiocapturemgr_iarm.h"
+#include "libIBus.h"
+#include <pthread.h>
+
+
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 0
 #define API_VERSION_NUMBER_PATCH 0
@@ -40,7 +48,6 @@
 bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
 bool keep_running = true;
-static unsigned int ticker = 0;
 JsonArray acrevents_arr;
 
 using namespace std;
@@ -165,7 +172,7 @@ namespace WPEFramework
                 ACRModeEnabled = parameters["enable"].Boolean();
                     if (ACRModeEnabled) {
                         response["message"] = "ACR feature enabled";
-			//getAudio();
+			getAudio();
 			if(_acrClient) {
                                 _acrClient->enableAudienceIntelligence(ACRModeEnabled);
                         }
@@ -318,37 +325,230 @@ namespace WPEFramework
                 returnResponse(ret);
         }
 
-        void AudienceIntelligence::get_suffix()
+        /*void AudienceIntelligence::get_suffix()
         {  
 	        std::ostringstream stream;
 	        stream << ticker++;
                 stream << ".wav";
 	        std::string outstring = stream.str();
 	        return outstring;
-        }        
+        }*/        
  	
-	void AudienceIntelligence::getAudio()
-        {
-		std::string filename;
-		int n = 0;
-		q_mgr manager;
-	        music_id_client client(&manager, music_id_client::FILE_OUTPUT);
-		client.enable_wav_header(true);
-		manager.start();
-		client.start();
-		while(n < 5)
-	        {
-		   filename = "/tmp/freshcap-"+ get_suffix();
-	           client.grab_fresh_sample(15, filename);
-		   LOGINFO("Audio Output file:%s\n", filename);
-		   if ( n == 5 )
-			break;
-		   n++;
-                }
-		manager.stop();
-		client.stop();
-                keep_running = false; 
+	void open_session()
+	{
+	        std::string filename;
+		iarmbus_acm_arg_t param;
+		IARM_Result_t ret;
+		param.details.arg_open.source = 0; //primary
+				param.details.arg_open.output_type = REALTIME_SOCKET;
+				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_OPEN, (void *) &param, sizeof(param));
+				if(!verify_result(ret, param))
+				{
+					break;
+				}
+				session = param.session_id;
+				LOGINFO("Opened new session");
+
+
+	} 
+
+	static bool verify_result(IARM_Result_t ret, iarmbus_acm_arg_t &param)
+{
+	if(IARM_RESULT_SUCCESS != ret)
+	{
+		LOGINFO("Bus call failed.\n";
+		return false;
 	}
+	if(0 != param.result)
+	{
+		std::cout<<"ACM implementation of bus call failed.\n";
+		return false;
+	}
+	return true;
+}
+
+        void get_default_props()
+{
+	param.session_id = session;
+				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_GET_DEFAULT_AUDIO_PROPS, (void *) &param, sizeof(param));
+				if(!verify_result(ret, param))
+				{
+					break;
+				}
+				LOGINFO("Format: 0x%x, delay comp: %dms, fifo size: %d, threshold: %d\n", 
+						param.details.arg_audio_properties.format,
+						param.details.arg_audio_properties.delay_compensation_ms,
+						param.details.arg_audio_properties.fifo_size,
+						param.details.arg_audio_properties.threshold);
+				props = param.details.arg_audio_properties;
+
+}
+
+	void set_audio_props()
+{
+		param.session_id = session;
+				param.details.arg_audio_properties = props;
+				param.details.arg_audio_properties.delay_compensation_ms = 190;
+				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_SET_AUDIO_PROPERTIES, (void *) &param, sizeof(param));
+				if(!verify_result(ret, param))
+				{
+					break;
+				}
+
+}
+
+        void get_output_props()
+{
+			param.session_id = session;
+				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_GET_OUTPUT_PROPS, (void *) &param, sizeof(param));
+				if(!verify_result(ret, param))
+				{
+					break;
+				}
+				socket_path = std::string(param.details.arg_output_props.output.file_path);
+				 LOGINFO("Output path is ");
+
+}
+
+void * read_thread(void * data)
+{
+	std::string socket_path = *(static_cast <std::string *> (data));
+	if(socket_path.empty())
+	{
+		std::cout<<"read thread returning as socket path is empty.\n";
+		return NULL;
+	}
+	std::cout<<"Connecting to socket "<<socket_path<<std::endl;
+	struct sockaddr_un addr;
+	addr.sun_family = AF_UNIX;
+	strncpy(addr.sun_path, socket_path.c_str(), (socket_path.size() + 1));
+	int read_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if(0 > read_fd)
+	{
+		std::cout<<"Couldn't create read socket. Exiting.\n";
+		return NULL;
+	}
+	if(0 != connect(read_fd, (const struct sockaddr *) &addr, sizeof(addr)))
+	{
+		std::cout<<"Couldn't connect to the path. Exiting.\n";
+		perror("read_thread");
+		close(read_fd);
+		return NULL;
+	}
+	std::cout<<"Connection established.\n";
+	unsigned int recvd_bytes = 0;
+	char buffer[1024];
+	std::string filename = "/opt/acm_ipout_dump_";
+	filename += instance_name;
+	std::ofstream file_dump(filename.c_str(), std::ios::binary);
+	while(true)
+	{
+		int ret = read(read_fd, buffer, 1024);
+		if(0 == ret)
+		{
+			std::cout<<"Zero bytes read. Exiting.\n";
+			break;
+		}
+		else if(0 > ret)
+		{
+			std::cout<<"Error reading from socket. Exiting.\n";
+			perror("read error");
+			break;
+		}
+		if((1024*1024*2) > recvd_bytes) //Write up to 2 MB to a file
+		{
+			file_dump.write(buffer, ret);
+		}
+		recvd_bytes += ret;
+	}
+
+	close(read_fd);
+	LOGINFO("Number of bytes read: %d",recvd_bytes);
+	file_dump.seekp(0, std::ios_base::end);
+	std::cout<<file_dump.tellp()<<" bytes written to file.\n";
+//	std::cout<<"Exiting read thread.\n";
+	return NULL;
+}
+
+void connect_and_read_data(std::string &socket_path)
+{
+	pthread_t thread;
+	int ret = pthread_create(&thread, NULL, read_thread, (void *) &socket_path);
+	if(0 == ret)
+	{
+		LOGINFO("Successfully launched read thread.\n");
+	}
+	else
+	{
+		LOGINFO("Failed to launch read thread.\n");
+	}
+}
+void start_capture()
+{
+			if(socket_path.empty())
+				{
+					LOGINFO("No path to socket available.\n");
+					break;
+				}
+				LOGINFO("Launching read thread.\n");
+				connect_and_read_data(socket_path);
+				param.session_id = session;
+				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_START, (void *) &param, sizeof(param));
+				if(!verify_result(ret, param))
+				{
+					break;
+				}
+				LOGINFO("Start procedure complete.\n");
+
+}
+
+void stop_capture()
+{
+			param.session_id = session;
+				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_STOP, (void *) &param, sizeof(param));
+				if(!verify_result(ret, param))
+				{
+					break;
+				}
+				LOGINFO("Stop procedure complete.\n");
+
+}
+
+void close_session()
+{
+			param.session_id = session;
+				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_CLOSE, (void *) &param, sizeof(param));
+				if(!verify_result(ret, param))
+				{
+					break;
+				}
+				LOGINFO("Close procedure complete.\n");
+				session = -1;
+				socket_path.clear();
+				keep_running = false;
+}
+
+
+        void AudienceIntelligence::getAudio()
+        {
+             if(0 != IARM_Bus_Init("acm_testapp_sample"))
+             {
+                LOGINFO("Unable to init IARMBus. Try another session name.\n");
+                return -1;
+             }
+        if(0 != IARM_Bus_Connect())
+        {
+                LOGINFO("Unable to connect to IARBus\n");
+                return -1;
+        }
+	open_session();
+        get_default_props();
+        set_audio_props();
+	get_output_props();
+	start_capture();
+        stop_capture();
+	close_session();
+        }
 
  	void AudienceIntelligence::notify(const std::string& event, const JsonObject& parameters)
         {

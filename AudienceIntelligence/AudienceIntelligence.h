@@ -71,9 +71,7 @@ namespace WPEFramework {
             virtual ~AudienceIntelligence();
 
             void notify(const std::string& event, const JsonObject& parameters); 
-            void getAudio(); 
-            void get_suffix(); 
-
+            void getAudio();
             AudienceIntelligenceListener *_acrEventListener;
             ACRClient *_acrClient;
  
