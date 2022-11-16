@@ -33,6 +33,25 @@ target_compile_definitions(${MODULE_NAME} PRIVATE MODULE_NAME=Plugin_${PLUGIN_NA
 
 target_include_directories(${MODULE_NAME} PRIVATE ../helpers)
 
+find_package(AC)
+if (AC_FOUND)
+    add_definitions(-DAC_FOUND)
+    target_include_directories(${MODULE_NAME} PRIVATE ${AC_INCLUDE_DIRS})
+    target_link_libraries(${MODULE_NAME}
+            PRIVATE
+            ${NAMESPACE}Plugins::${NAMESPACE}Plugins
+            ${CURL_LIBRARY}
+            ${AC_LIBRARIES}
+            )
+
+else(AC_FOUND)
+    target_link_libraries(${MODULE_NAME}
+            PRIVATE
+            ${NAMESPACE}Plugins::${NAMESPACE}Plugins
+            ${CURL_LIBRARY}
+            )
+endif(AC_FOUND)
+
 find_package(DS)
 if (DS_FOUND)
     find_package(IARMBus)

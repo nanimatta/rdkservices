@@ -35,8 +35,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <errno.h>
-#include "safec_lib.h"
-#include "audiocapturemgr_iarm.h"
+//#include "safec_lib.h"
 #include "libIBus.h"
 #include <pthread.h>
 
@@ -336,6 +335,9 @@ namespace WPEFramework
  	
 	void open_session()
 	{
+		bool keep_running = true;
+		audio_properties_ifce_t props;
+		std::string socket_path;
 	        std::string filename;
 		iarmbus_acm_arg_t param;
 		IARM_Result_t ret;
