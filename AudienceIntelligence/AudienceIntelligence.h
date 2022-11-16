@@ -71,8 +71,11 @@ namespace WPEFramework {
             void InitializeIARM();
             void DeinitializeIARM();
 
-	private/*members*/:
+	public/*members*/:
             audiocapturemgr::session_id_t session;
+	    audiocapturemgr::REALTIME_SOCKET RT_SOCKET;
+	    audiocapturemgr::iarmbus_acm_arg_t iarmbus_acm_arg_tt;
+	    audiocapturemgr::audio_properties_ifce_t audio_properties_ifce_t;
             unsigned int _max_supported_duration;
             //std::unique_ptr<socket_adaptor> _sock_adaptor;
             audiocapturemgr::audio_properties_ifce_t _audio_properties;

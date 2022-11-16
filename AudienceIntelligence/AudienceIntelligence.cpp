@@ -55,6 +55,20 @@ namespace WPEFramework
     namespace Plugin
     {
 
+	static bool verify_result(IARM_Result_t ret, iarmbus_acm_arg_tt &param)
+{
+	if(IARM_RESULT_SUCCESS != ret)
+	{
+		LOGINFO("Bus call failed.\n");
+		return false;
+	}
+	if(0 != param.result)
+	{
+		std::cout<<"ACM implementation of bus call failed.\n";
+		return false;
+	}
+	return true;
+}
 	SERVICE_REGISTRATION(AudienceIntelligence, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 	AudienceIntelligence* AudienceIntelligence::_instance = nullptr;
 	std::vector<string> registeredEvtListeners;
@@ -335,18 +349,17 @@ namespace WPEFramework
  	
 	void open_session()
 	{
-		bool keep_running = true;
 		audio_properties_ifce_t props;
 		std::string socket_path;
 	        std::string filename;
-		iarmbus_acm_arg_t param;
+		iarmbus_acm_arg_tt param;
 		IARM_Result_t ret;
 		param.details.arg_open.source = 0; //primary
-				param.details.arg_open.output_type = REALTIME_SOCKET;
+				param.details.arg_open.output_type = RT_SOCKET;
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_OPEN, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
-					break;
+				     LOGINFO(" Unknown input!");
 				}
 				session = param.session_id;
 				LOGINFO("Opened new session");
@@ -354,28 +367,13 @@ namespace WPEFramework
 
 	} 
 
-	static bool verify_result(IARM_Result_t ret, iarmbus_acm_arg_t &param)
-{
-	if(IARM_RESULT_SUCCESS != ret)
-	{
-		LOGINFO("Bus call failed.\n";
-		return false;
-	}
-	if(0 != param.result)
-	{
-		std::cout<<"ACM implementation of bus call failed.\n";
-		return false;
-	}
-	return true;
-}
-
         void get_default_props()
 {
 	param.session_id = session;
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_GET_DEFAULT_AUDIO_PROPS, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
-					break;
+				     LOGINFO(" Unknown input!");
 				}
 				LOGINFO("Format: 0x%x, delay comp: %dms, fifo size: %d, threshold: %d\n", 
 						param.details.arg_audio_properties.format,
@@ -394,7 +392,7 @@ namespace WPEFramework
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_SET_AUDIO_PROPERTIES, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
-					break;
+				     LOGINFO(" Unknown input!");
 				}
 
 }
@@ -405,7 +403,7 @@ namespace WPEFramework
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_GET_OUTPUT_PROPS, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
-					break;
+				     LOGINFO(" Unknown input!");
 				}
 				socket_path = std::string(param.details.arg_output_props.output.file_path);
 				 LOGINFO("Output path is ");
@@ -490,7 +488,6 @@ void start_capture()
 			if(socket_path.empty())
 				{
 					LOGINFO("No path to socket available.\n");
-					break;
 				}
 				LOGINFO("Launching read thread.\n");
 				connect_and_read_data(socket_path);
@@ -498,7 +495,7 @@ void start_capture()
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_START, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
-					break;
+				     LOGINFO(" Unknown input!");
 				}
 				LOGINFO("Start procedure complete.\n");
 
@@ -510,7 +507,7 @@ void stop_capture()
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_STOP, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
-					break;
+				     LOGINFO(" Unknown input!");
 				}
 				LOGINFO("Stop procedure complete.\n");
 
@@ -522,7 +519,7 @@ void close_session()
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_CLOSE, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
-					break;
+				     LOGINFO(" Unknown input!");
 				}
 				LOGINFO("Close procedure complete.\n");
 				session = -1;
