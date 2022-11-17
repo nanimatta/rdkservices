@@ -21,8 +21,6 @@
 
 #include "Module.h"
 #include "acrclient.h"
-#include "audiocapturemgr_iarm.h"
-#include "libIARM.h"
 
 //class socket_adaptor;
 
@@ -70,20 +68,6 @@ namespace WPEFramework {
 	protected:
             void InitializeIARM();
             void DeinitializeIARM();
-
-	public/*members*/:
-            audiocapturemgr::session_id_t session;
-	    audiocapturemgr::REALTIME_SOCKET RT_SOCKET;
-	    audiocapturemgr::iarmbus_acm_arg_t iarmbus_acm_arg_tt;
-	    audiocapturemgr::audio_properties_ifce_t audio_properties_ifce_t;
-            unsigned int _max_supported_duration;
-            //std::unique_ptr<socket_adaptor> _sock_adaptor;
-            audiocapturemgr::audio_properties_ifce_t _audio_properties;
-            string _audio_format_string;
-            string _destination_url;
-            bool _is_precapture;
-            unsigned int _duration;
-            static pthread_mutex_t _mutex;
 
         public:
             AudienceIntelligence();

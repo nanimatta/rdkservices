@@ -31,6 +31,8 @@
 #include <string.h>
 #include <syscall.h>
 
+#undef LOG // we don't need LOG from audiocapturemgr_iarm as we are defining our own LOG
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -39,6 +41,8 @@
 #include "libIBus.h"
 #include <pthread.h>
 
+#include "audiocapturemgr_iarm.h"
+#include "libIARM.h"
 
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 0
@@ -48,6 +52,13 @@ bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
 bool keep_running = true;
 JsonArray acrevents_arr;
+std::string socket_path;
+IARM_Result_t ret;
+static const char * instance_name = "test";
+audiocapturemgr::session_id_t session;
+audiocapturemgr::iarmbus_acm_arg_t param;
+audiocapturemgr::audio_properties_ifce_t audio_properties_ifce_t;
+audiocapturemgr::audio_properties_ifce_t props;
 
 using namespace std;
 namespace WPEFramework
@@ -55,7 +66,7 @@ namespace WPEFramework
     namespace Plugin
     {
 
-	static bool verify_result(IARM_Result_t ret, iarmbus_acm_arg_tt &param)
+	static bool verify_result(IARM_Result_t ret, iarmbus_acm_arg_t &param)
 {
 	if(IARM_RESULT_SUCCESS != ret)
 	{
@@ -349,13 +360,8 @@ namespace WPEFramework
  	
 	void open_session()
 	{
-		audio_properties_ifce_t props;
-		std::string socket_path;
-	        std::string filename;
-		iarmbus_acm_arg_tt param;
-		IARM_Result_t ret;
 		param.details.arg_open.source = 0; //primary
-				param.details.arg_open.output_type = RT_SOCKET;
+				param.details.arg_open.output_type = 1;
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_OPEN, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
@@ -533,12 +539,12 @@ void close_session()
              if(0 != IARM_Bus_Init("acm_testapp_sample"))
              {
                 LOGINFO("Unable to init IARMBus. Try another session name.\n");
-                return -1;
+                return;
              }
         if(0 != IARM_Bus_Connect())
         {
                 LOGINFO("Unable to connect to IARBus\n");
-                return -1;
+                return;
         }
 	open_session();
         get_default_props();
