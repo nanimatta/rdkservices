@@ -534,6 +534,7 @@ void close_session()
 }
 
 
+
         void AudienceIntelligence::getAudio()
         {
              if(0 != IARM_Bus_Init("acm_testapp_sample"))
