@@ -18,6 +18,7 @@
 **/
 #include <cjson/cJSON.h>
 #include "AudienceIntelligence.h"
+#include "UtilsCStr.h"
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
 #include <string>
@@ -37,7 +38,6 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <errno.h>
-//#include "safec_lib.h"
 #include "libIBus.h"
 #include <pthread.h>
 
@@ -55,31 +55,33 @@ JsonArray acrevents_arr;
 std::string socket_path;
 IARM_Result_t ret;
 static const char * instance_name = "test";
-audiocapturemgr::session_id_t session;
-audiocapturemgr::iarmbus_acm_arg_t param;
-audiocapturemgr::audio_properties_ifce_t audio_properties_ifce_t;
-audiocapturemgr::audio_properties_ifce_t props;
+//audiocapturemgr::session_id_t session;
+//audiocapturemgr::iarmbus_acm_arg_t param;
+//audiocapturemgr::audio_properties_ifce_t audio_properties_ifce_t;
+//audiocapturemgr::audio_properties_ifce_t props;
 
 using namespace std;
+using namespace audiocapturemgr;
+
 namespace WPEFramework
 {
     namespace Plugin
     {
 
 	static bool verify_result(IARM_Result_t ret, iarmbus_acm_arg_t &param)
-{
-	if(IARM_RESULT_SUCCESS != ret)
-	{
+        {
+	  if(IARM_RESULT_SUCCESS != ret)
+	  {
 		LOGINFO("Bus call failed.\n");
 		return false;
-	}
-	if(0 != param.result)
-	{
+	  }
+	  if(0 != param.result)
+	  {
 		std::cout<<"ACM implementation of bus call failed.\n";
 		return false;
-	}
-	return true;
-}
+	  }
+	  return true;
+        }
 	SERVICE_REGISTRATION(AudienceIntelligence, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 	AudienceIntelligence* AudienceIntelligence::_instance = nullptr;
 	std::vector<string> registeredEvtListeners;
@@ -360,8 +362,9 @@ namespace WPEFramework
  	
 	void open_session()
 	{
+		iarmbus_acm_arg_t param;
 		param.details.arg_open.source = 0; //primary
-				param.details.arg_open.output_type = 1;
+				param.details.arg_open.output_type = BUFFERED_FILE_OUTPUT;
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_OPEN, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
@@ -375,7 +378,8 @@ namespace WPEFramework
 
         void get_default_props()
 {
-	param.session_id = session;
+		iarmbus_acm_arg_t param;
+	        param.session_id = session;
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_GET_DEFAULT_AUDIO_PROPS, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
@@ -392,6 +396,7 @@ namespace WPEFramework
 
 	void set_audio_props()
 {
+		iarmbus_acm_arg_t param;
 		param.session_id = session;
 				param.details.arg_audio_properties = props;
 				param.details.arg_audio_properties.delay_compensation_ms = 190;
@@ -405,7 +410,8 @@ namespace WPEFramework
 
         void get_output_props()
 {
-			param.session_id = session;
+		iarmbus_acm_arg_t param;
+		param.session_id = session;
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_GET_OUTPUT_PROPS, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
 				{
@@ -491,6 +497,7 @@ void connect_and_read_data(std::string &socket_path)
 }
 void start_capture()
 {
+		iarmbus_acm_arg_t param;
 			if(socket_path.empty())
 				{
 					LOGINFO("No path to socket available.\n");
@@ -509,6 +516,7 @@ void start_capture()
 
 void stop_capture()
 {
+		iarmbus_acm_arg_t param;
 			param.session_id = session;
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_STOP, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
@@ -521,6 +529,7 @@ void stop_capture()
 
 void close_session()
 {
+		iarmbus_acm_arg_t param;
 			param.session_id = session;
 				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_CLOSE, (void *) &param, sizeof(param));
 				if(!verify_result(ret, param))
