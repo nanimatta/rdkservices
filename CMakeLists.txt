@@ -42,8 +42,8 @@ if(PLUGIN_PACKAGER)
     add_subdirectory(Packager)
 endif()
 
-if(PLUGIN_AUDIENCEINTLLIGENCE)
-        add_subdirectory(AudienceIntlligence)
+if(PLUGIN_AUDIENCEINTELLIGENCE)
+        add_subdirectory(AudienceIntelligence)
 endif()
 
 if(PLUGIN_BLUETOOTH)

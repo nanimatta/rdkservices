@@ -162,7 +162,6 @@ namespace WPEFramework
                 ACRModeEnabled = parameters["enable"].Boolean();
                     if (ACRModeEnabled) {
                         response["message"] = "ACR feature enabled";
-			getAudio();
 			if(_acrClient) {
                                 _acrClient->enableAudienceIntelligence(ACRModeEnabled);
                         }
@@ -199,6 +198,7 @@ namespace WPEFramework
 	uint32_t AudienceIntelligence::setACRFrequency(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
+            return;
         }
 
 
