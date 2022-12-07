@@ -55,13 +55,11 @@ JsonArray acrevents_arr;
 std::string socket_path;
 IARM_Result_t ret;
 static const char * instance_name = "test";
-//audiocapturemgr::session_id_t session;
-//audiocapturemgr::iarmbus_acm_arg_t param;
-//audiocapturemgr::audio_properties_ifce_t audio_properties_ifce_t;
-//audiocapturemgr::audio_properties_ifce_t props;
 
 using namespace std;
 using namespace audiocapturemgr;
+audiocapturemgr::session_id_t session;
+audiocapturemgr::audio_properties_ifce_t props;
 
 namespace WPEFramework
 {
