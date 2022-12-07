@@ -198,7 +198,7 @@ namespace WPEFramework
 	uint32_t AudienceIntelligence::setACRFrequency(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
-            return;
+            return 1;
         }
 
 
