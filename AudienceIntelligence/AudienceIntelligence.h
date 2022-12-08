@@ -56,6 +56,7 @@ namespace WPEFramework {
             uint32_t enableLAR(const JsonObject& parameters, JsonObject& response);
             uint32_t enableACR(const JsonObject& parameters, JsonObject& response);
             uint32_t setACRFrequency(const JsonObject& parameters, JsonObject& response);
+            uint32_t CaptureAudio(const JsonObject& parameters, JsonObject& response);
         	
 	    uint32_t registerListeners(const JsonObject& parameters, JsonObject& response);
             uint32_t unregisterListeners(const JsonObject& parameters, JsonObject& response);

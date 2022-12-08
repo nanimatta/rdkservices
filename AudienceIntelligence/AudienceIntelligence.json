@@ -76,6 +76,25 @@
                 "$ref": "#/definitions/result"
             }
         },
+        "CaptureAudio":{
+            "summary": "Enable audio capture",
+            "params": {
+                "type":"object",
+                "properties": {
+                    "enable": {
+                        "summary": "`true` to enable or `false` to disable",
+                        "type":"boolean",
+                        "example": true
+                    }
+		},
+		"required": [
+                    "enable"
+                ]
+            },
+	    "result": {
+                "$ref": "#/definitions/result"
+            }
+         },
         "enableACR":{
             "summary": "Enables or disables ACR",
             "params": {

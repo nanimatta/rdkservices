@@ -95,6 +95,7 @@ namespace WPEFramework
             Register("enableLAR", &AudienceIntelligence::enableLAR, this);
             Register("enableACR", &AudienceIntelligence::enableACR, this);
             Register("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
+            Register("CaptureAudio", &AudienceIntelligence::CaptureAudio, this);
 
 	    Register("registerListeners",&AudienceIntelligence::registerListeners, this);  //Register ACRLAR Events
 	    Register("unregisterListeners",&AudienceIntelligence::unregisterListeners, this);
@@ -196,7 +197,6 @@ namespace WPEFramework
                 ACRModeEnabled = parameters["enable"].Boolean();
                     if (ACRModeEnabled) {
                         response["message"] = "ACR feature enabled";
-			getAudio();
 			if(_acrClient) {
                                 _acrClient->enableAudienceIntelligence(ACRModeEnabled);
                         }
@@ -542,25 +542,34 @@ void close_session()
 
 
 
-        void AudienceIntelligence::getAudio()
+	uint32_t AudienceIntelligence::CaptureAudio(const JsonObject& parameters, JsonObject& response)
         {
-             if(0 != IARM_Bus_Init("acm_testapp_sample"))
-             {
-                LOGINFO("Unable to init IARMBus. Try another session name.\n");
-                return;
-             }
-        if(0 != IARM_Bus_Connect())
-        {
-                LOGINFO("Unable to connect to IARBus\n");
-                return;
-        }
-	open_session();
-        get_default_props();
-        set_audio_props();
-	get_output_props();
-	start_capture();
-        stop_capture();
-	close_session();
+	    LOGINFOMETHOD();
+	    bool result = true;
+            if (!parameters.HasLabel("enable"))
+            {
+                result = false;
+                response["message"] = "please specify enable parameter";
+            }
+
+            if (result)
+            {
+                bool status = parameters["enable"].Boolean();
+                if (status)
+                {
+	          open_session();
+                  get_default_props();
+                  set_audio_props();
+	          get_output_props();
+	          start_capture();
+	        }
+		else
+		{
+                  stop_capture();
+	          close_session();
+		}
+	    }
+	    returnResponse(result);
         }
 
  	void AudienceIntelligence::notify(const std::string& event, const JsonObject& parameters)
@@ -581,6 +590,7 @@ void close_session()
             Unregister("setLogLevel");
             Unregister("enableLAR");
             Unregister("enableACR");
+            Unregister("CaptureAudio");
             Unregister("setACRFrequency");
 	    Unregister("registerListeners");
 	    Unregister("unregisterListeners");
