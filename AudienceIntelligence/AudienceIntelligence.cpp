@@ -129,6 +129,7 @@ namespace WPEFramework
 	   if(Utils::IARM::init())
             {
                     //IARM_Result_t res;
+		    //IARM_CHECK( IARM_Bus_RegisterEventHandler(IARMBUS_AUDIOCAPTUREMGR_NAME, DATA_CAPTURE_IARM_EVENT_AUDIO_CLIP_READY, iarmEventHandler));
             }
         }
 
@@ -138,6 +139,7 @@ namespace WPEFramework
 	   if(Utils::IARM::isConnected())
             {
                     //IARM_Result_t res;
+		    //IARM_CHECK( IARM_Bus_UnRegisterEventHandler(IARMBUS_AUDIOCAPTUREMGR_NAME, DATA_CAPTURE_IARM_EVENT_AUDIO_CLIP_READY));
             }
 
         }
@@ -416,7 +418,8 @@ namespace WPEFramework
 				     LOGINFO(" Unknown input!");
 				}
 				socket_path = std::string(param.details.arg_output_props.output.file_path);
-				 LOGINFO("Output path is ");
+				std::cout<<"Output path is "<<socket_path<<std::endl;
+				 //LOGINFO("Output path is %s\n", socket_path);
 
 }
 
