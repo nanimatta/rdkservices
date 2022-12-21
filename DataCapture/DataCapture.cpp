@@ -462,10 +462,14 @@ namespace WPEFramework {
 
                     // Optionally, we can save a file
                     FILE * pFile;
-                    const char* path = strcat(payload->dataLocator, ".received.pcm");
+		    std::string filename = ".received.pcm_";
+		    static int count = 0;
+		    filename += count;
+                    const char* path = strcat(payload->dataLocator, filename);
                     pFile = fopen (path, "wb");
                     fwrite (&data[0] , sizeof(unsigned char), data.size(), pFile);
                     fclose (pFile);
+		    count++;
                     // now, upload it, then remove:
 //                    if (remove(path) != 0)
 //                    {
