@@ -462,10 +462,10 @@ namespace WPEFramework {
 
                     // Optionally, we can save a file
                     FILE * pFile;
-		    std::string path = payload->dataLocator; 
+		    //std::string path = payload->dataLocator;
 		    static int count = 0;
-		    path = path + ".received.pcm_" + to_string(count);
-                    //const char* path = strcat(payload->dataLocator, ".received.pcm_");
+		    //std::string path = std::string(payload->dataLocator) + std::string(".received.pcm_") + std::to_string(count);
+                    const char* path = strcat(payload->dataLocator, std::string(".received.pcm_") + std::to_string(count));
                     pFile = fopen (path, "wb");
                     fwrite (&data[0] , sizeof(unsigned char), data.size(), pFile);
                     fclose (pFile);
