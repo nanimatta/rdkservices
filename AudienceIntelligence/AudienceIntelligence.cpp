@@ -51,6 +51,7 @@
 bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
 bool keep_running = true;
+int Svalue = 0;
 JsonArray acrevents_arr;
 std::string socket_path;
 IARM_Result_t ret;
@@ -94,6 +95,7 @@ namespace WPEFramework
             Register("setLogLevel", &AudienceIntelligence::setLogLevelWrapper, this);
             Register("enableLAR", &AudienceIntelligence::enableLAR, this);
             Register("enableACR", &AudienceIntelligence::enableACR, this);
+            Register("frameSkip", &AudienceIntelligence::frameSkip, this);
             Register("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
             Register("CaptureAudio", &AudienceIntelligence::CaptureAudio, this);
 
@@ -232,6 +234,28 @@ namespace WPEFramework
 	    returnResponse(result);
         }
         
+	uint32_t AudienceIntelligence::frameSkip(const JsonObject& parameters, JsonObject& response)
+        {
+            LOGINFOMETHOD();
+	    bool result = true;
+            if (!parameters.HasLabel("value"))
+            {
+                result = false;
+                response["message"] = "please specify value parameter";
+            }
+            if (result)
+            {
+                Svalue = (unsigned int)parameters["value"].Number();
+                    if (Svalue <= 1)
+		    {
+			if(_acrClient) {
+                                _acrClient->updateframeskipvalue(Svalue);
+                        }
+                        response["message"] = "Updated frameSkip value";
+		    }
+            }
+	    returnResponse(result);
+        }
 	uint32_t AudienceIntelligence::setACRFrequency(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
@@ -593,6 +617,7 @@ void close_session()
             Unregister("setLogLevel");
             Unregister("enableLAR");
             Unregister("enableACR");
+            Unregister("frameSkip");
             Unregister("CaptureAudio");
             Unregister("setACRFrequency");
 	    Unregister("registerListeners");

@@ -461,20 +461,24 @@ namespace WPEFramework {
                     }
 
                     // Optionally, we can save a file
-		    std::string timenow;
+                    std::string timenow;
                     Core::Time::Now().ToString(timenow);
+                    std::remove(timenow.begin(),timenow.end(),' ');
+                    std::remove(timenow.begin(),timenow.end(),',');
                     std::string newname = std::string(payload->dataLocator) + std::string("_") + timenow + std::string(".pcm");
+                    std::remove(newname.begin(),newname.end(),' ');
                     FILE * pFile;
                     const char* path = strcat(payload->dataLocator, ".received.pcm");
+		    std::string oldp(path);
                     pFile = fopen (path, "wb");
                     fwrite (&data[0] , sizeof(unsigned char), data.size(), pFile);
                     fclose (pFile);
 
                     // now, upload it, then remove:
 //                    if (remove(path) != 0)
-		    if (std::rename(path.c_str(), newname.c_str()) != 0)
+		    if (std::rename(oldp.c_str(), newname.c_str()) != 0)
                     {
-                        LOGERR("Unable to delete %s", path);
+                        LOGERR("Unable to delete- %s", path);
                     }
                 } else {
                     LOGERR("Unable to read data from %s (connection error)", payload->dataLocator);
