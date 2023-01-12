@@ -18,8 +18,10 @@
 **/
 #include <cjson/cJSON.h>
 #include "AudienceIntelligence.h"
+
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
+
 #include <string>
 #include <memory>
 #include <iostream>
@@ -28,7 +30,6 @@
 #include <fstream>
 #include <sstream>
 #include <unistd.h>
-#include <string.h>
 #include <syscall.h>
 
 #define API_VERSION_NUMBER_MAJOR 1
@@ -37,7 +38,7 @@
 
 bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
-bool keep_running = true;
+int Svalue = 0;
 JsonArray acrevents_arr;
 
 using namespace std;
@@ -54,12 +55,13 @@ namespace WPEFramework
         : PluginHost::JSONRPC(),
 	_acrEventListener(nullptr)
         {
-	    LOGINFO("ctor");
+	    //LOGINFO("ctor");
 
             Register("getLogLevel", &AudienceIntelligence::getLogLevelWrapper, this);
             Register("setLogLevel", &AudienceIntelligence::setLogLevelWrapper, this);
             Register("enableLAR", &AudienceIntelligence::enableLAR, this);
             Register("enableACR", &AudienceIntelligence::enableACR, this);
+	    Register("frameSkip", &AudienceIntelligence::frameSkip, this);
             Register("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
 
 	    Register("registerListeners",&AudienceIntelligence::registerListeners, this);  //Register ACRLAR Events
@@ -93,7 +95,7 @@ namespace WPEFramework
            LOGWARN("AudienceIntelligence::InitializeIARM");
 	   if(Utils::IARM::init())
             {
-                    //IARM_Result_t res;
+       //             IARM_Result_t res;
             }
         }
 
@@ -102,7 +104,7 @@ namespace WPEFramework
            LOGWARN("AudienceIntelligence::DeinitializeIARM");
 	   if(Utils::IARM::isConnected())
             {
-                    //IARM_Result_t res;
+            //        IARM_Result_t res;
             }
 
         }
@@ -195,10 +197,33 @@ namespace WPEFramework
 	    returnResponse(result);
         }
         
+	uint32_t AudienceIntelligence::frameSkip(const JsonObject& parameters, JsonObject& response)
+        {
+            LOGINFOMETHOD();
+	    bool result = true;
+            if (!parameters.HasLabel("value"))
+            {
+                result = false;
+                response["message"] = "please specify value parameter";
+            }
+            if (result)
+            {
+                Svalue = (unsigned int)parameters["value"].Number();
+                    if (Svalue <= 1)
+		    {
+			if(_acrClient) {
+                                _acrClient->updateframeskipvalue(Svalue);
+                        }
+                        response["message"] = "Updated frameSkip value";
+		    }
+            }
+	    returnResponse(result);
+        }
+
 	uint32_t AudienceIntelligence::setACRFrequency(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
-            return 1;
+		return 0;
         }
 
 
@@ -233,13 +258,13 @@ namespace WPEFramework
                         vector<string> eventname;
                         JsonArray response_arr;
                         JsonObject acrlarevent;
-			LOGINFO("Register arrsize : %d ",arrsize);
+			//LOGINFO("Register arrsize : %d ",arrsize);
                         for(i=0;i<arrsize;i++)
                         {
                                 elem = cJSON_GetArrayItem(items, i);
                                 string evt_str =elem->valuestring;
                                 eventname.push_back(evt_str);
-                                LOGINFO("Register Event Listener %s ",evt_str.c_str());
+                                //LOGINFO("Register Event Listener %s ",evt_str.c_str());
                                 acrlarevent["propertyName"] = evt_str;
                                 response_arr.Add(acrlarevent);
                          }
@@ -249,7 +274,7 @@ namespace WPEFramework
 
                                 if (std::find(registeredEvtListeners.begin(), registeredEvtListeners.end(), *it) == registeredEvtListeners.end())
                                 {
-                                        LOGINFO("Event being added to listeners %s",it->c_str());
+                                        //LOGINFO("Event being added to listeners %s",it->c_str());
                                         registeredEvtListeners.push_back(*it);
                                 }
 			 }
@@ -303,7 +328,7 @@ namespace WPEFramework
                                 vector<string>::iterator itr=find(registeredEvtListeners.begin(), registeredEvtListeners.end(), *it);
                                 if(itr!=registeredEvtListeners.end())
                                 {
-                                        LOGINFO("Event erased : %s",it->c_str());
+                                        //LOGINFO("Event erased : %s",it->c_str());
                                         registeredEvtListeners.erase(itr);
                                 }
                         }
@@ -314,14 +339,15 @@ namespace WPEFramework
                 returnResponse(ret);
         }
 
+
  	void AudienceIntelligence::notify(const std::string& event, const JsonObject& parameters)
         {
                 string property_name = parameters["propertyName"].String();
-		LOGINFO(" event notification : %s  propertyname : %s \n",event.c_str(),property_name.c_str());
+		//LOGINFO(" event notification : %s  propertyname : %s \n",event.c_str(),property_name.c_str());
                 if(std::find(registeredEvtListeners.begin(), registeredEvtListeners.end(), property_name) != registeredEvtListeners.end())
                 {
 
-			 LOGINFO(" Property registered notifying the events \n");
+			 //LOGINFO(" Property registered notifying the events \n");
                         sendNotify(event.c_str(),parameters);
                 }
 	}
@@ -332,6 +358,7 @@ namespace WPEFramework
             Unregister("setLogLevel");
             Unregister("enableLAR");
             Unregister("enableACR");
+	    Unregister("frameSkip");
             Unregister("setACRFrequency");
 	    Unregister("registerListeners");
 	    Unregister("unregisterListeners");
@@ -345,21 +372,25 @@ namespace WPEFramework
 	AudienceIntelligenceListener::AudienceIntelligenceListener(AudienceIntelligence* audintelligence)
                         : maudintelligence(*audintelligence)
         {
-		LOGINFO("Constructor \n");
+		//LOGINFO("Constructor \n");
         }
         AudienceIntelligenceListener::~AudienceIntelligenceListener()
         {
-		LOGINFO("Destructor \n");
+		//LOGINFO("Destructor \n");
         }
 
 
-	void AudienceIntelligenceListener::onCLDSignatureEvent(const std::string& event,uint64_t epochts)
+	void AudienceIntelligenceListener::onCLDSignatureEvent(const std::string& event,uint64_t epochts,unsigned int is_interlaced,unsigned int frame_rate,unsigned int pic_width,unsigned int pic_height,int frame_skip)
         {
-                LOGINFO("CLD event at Audience Intelligence Plugin :%s \n",event.c_str());
+                //LOGINFO("CLD event at Audience Intelligence Plugin :%s \n",event.c_str());
 
                 JsonObject params;
 		params.FromString(event);
 		params["timestamp"] = epochts;
+		params["is_interlaced"] = is_interlaced;
+                params["pic_width"]     = pic_width;
+                params["pic_height"]    = pic_height;
+                params["frame_skip"]    = frame_skip;
                 acrevents_arr.Add(params);
 		if(acrevents_arr.Length() == 4)
 		{
@@ -371,7 +402,7 @@ namespace WPEFramework
                 	//LOGINFO("NOTIFY json is %s\n",json.c_str());
                 	maudintelligence.notify("onacrevent",acrevent);
 			acrevents_arr.Clear();
-			LOGINFO(" length of acrevents_arr now %d \n",acrevents_arr.Length());
+			//LOGINFO(" length of acrevents_arr now %d \n",acrevents_arr.Length());
 		}
         }
 

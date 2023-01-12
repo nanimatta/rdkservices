@@ -33,7 +33,7 @@ namespace WPEFramework {
          public:
                 AudienceIntelligenceListener(AudienceIntelligence* audintelligence);
                 ~AudienceIntelligenceListener();
-                virtual void onCLDSignatureEvent(const std::string& event,uint64_t epochts);
+                virtual void onCLDSignatureEvent(const std::string& event,uint64_t epochts,unsigned int is_interlaced,unsigned int frame_rate,unsigned int pic_width,unsigned int pic_height,int frame_skip);
 		//TODO add method to receive LAR Events
          private:
                 AudienceIntelligence& maudintelligence;
@@ -52,6 +52,7 @@ namespace WPEFramework {
             uint32_t setLogLevelWrapper(const JsonObject& parameters, JsonObject& response);
             uint32_t enableLAR(const JsonObject& parameters, JsonObject& response);
             uint32_t enableACR(const JsonObject& parameters, JsonObject& response);
+	    uint32_t frameSkip(const JsonObject& parameters, JsonObject& response);
             uint32_t setACRFrequency(const JsonObject& parameters, JsonObject& response);
         	
 	    uint32_t registerListeners(const JsonObject& parameters, JsonObject& response);
@@ -71,7 +72,6 @@ namespace WPEFramework {
             virtual ~AudienceIntelligence();
 
             void notify(const std::string& event, const JsonObject& parameters); 
-
             AudienceIntelligenceListener *_acrEventListener;
             ACRClient *_acrClient;
  

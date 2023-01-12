@@ -95,6 +95,25 @@
                 "$ref": "#/definitions/result"
             }
          },
+	 "frameSkip":{
+            "summary": "Set frameskip value",
+            "params": {
+                "type":"object",
+                "properties": {
+                    "value": {
+                        "summary": " 0 or 1",
+                        "type":"integer",
+                        "example": 1
+                    }
+		},
+		"required": [
+                    "value"
+                ]
+            },
+	    "result": {
+                "$ref": "#/definitions/result"
+            }
+         },
          "enableLAR":{
             "summary": "Enables or disables LAR",
             "params": {
