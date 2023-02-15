@@ -21,9 +21,6 @@
 
 #include "Module.h"
 #include "acrclient.h"
-
-//class socket_adaptor;
-
 namespace WPEFramework {
 
     namespace Plugin {
@@ -55,9 +52,7 @@ namespace WPEFramework {
             uint32_t setLogLevelWrapper(const JsonObject& parameters, JsonObject& response);
             uint32_t enableLAR(const JsonObject& parameters, JsonObject& response);
             uint32_t enableACR(const JsonObject& parameters, JsonObject& response);
-            uint32_t frameSkip(const JsonObject& parameters, JsonObject& response);
             uint32_t setACRFrequency(const JsonObject& parameters, JsonObject& response);
-            uint32_t CaptureAudio(const JsonObject& parameters, JsonObject& response);
         	
 	    uint32_t registerListeners(const JsonObject& parameters, JsonObject& response);
             uint32_t unregisterListeners(const JsonObject& parameters, JsonObject& response);
@@ -76,7 +71,7 @@ namespace WPEFramework {
             virtual ~AudienceIntelligence();
 
             void notify(const std::string& event, const JsonObject& parameters); 
-            void getAudio();
+
             AudienceIntelligenceListener *_acrEventListener;
             ACRClient *_acrClient;
  

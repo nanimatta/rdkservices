@@ -18,7 +18,6 @@
 **/
 #include <cjson/cJSON.h>
 #include "AudienceIntelligence.h"
-#include "UtilsCStr.h"
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
 #include <string>
@@ -32,18 +31,6 @@
 #include <string.h>
 #include <syscall.h>
 
-#undef LOG // we don't need LOG from audiocapturemgr_iarm as we are defining our own LOG
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <errno.h>
-#include "libIBus.h"
-#include <pthread.h>
-
-#include "audiocapturemgr_iarm.h"
-#include "libIARM.h"
-
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 0
 #define API_VERSION_NUMBER_PATCH 0
@@ -51,36 +38,14 @@
 bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
 bool keep_running = true;
-int Svalue = 0;
 JsonArray acrevents_arr;
-std::string socket_path;
-IARM_Result_t ret;
-static const char * instance_name = "test";
 
 using namespace std;
-using namespace audiocapturemgr;
-audiocapturemgr::session_id_t session;
-audiocapturemgr::audio_properties_ifce_t props;
-
 namespace WPEFramework
 {
     namespace Plugin
     {
 
-	static bool verify_result(IARM_Result_t ret, iarmbus_acm_arg_t &param)
-        {
-	  if(IARM_RESULT_SUCCESS != ret)
-	  {
-		LOGINFO("Bus call failed.\n");
-		return false;
-	  }
-	  if(0 != param.result)
-	  {
-		std::cout<<"ACM implementation of bus call failed.\n";
-		return false;
-	  }
-	  return true;
-        }
 	SERVICE_REGISTRATION(AudienceIntelligence, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 	AudienceIntelligence* AudienceIntelligence::_instance = nullptr;
 	std::vector<string> registeredEvtListeners;
@@ -95,9 +60,7 @@ namespace WPEFramework
             Register("setLogLevel", &AudienceIntelligence::setLogLevelWrapper, this);
             Register("enableLAR", &AudienceIntelligence::enableLAR, this);
             Register("enableACR", &AudienceIntelligence::enableACR, this);
-            Register("frameSkip", &AudienceIntelligence::frameSkip, this);
             Register("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
-            Register("CaptureAudio", &AudienceIntelligence::CaptureAudio, this);
 
 	    Register("registerListeners",&AudienceIntelligence::registerListeners, this);  //Register ACRLAR Events
 	    Register("unregisterListeners",&AudienceIntelligence::unregisterListeners, this);
@@ -131,7 +94,6 @@ namespace WPEFramework
 	   if(Utils::IARM::init())
             {
                     //IARM_Result_t res;
-		    //IARM_CHECK( IARM_Bus_RegisterEventHandler(IARMBUS_AUDIOCAPTUREMGR_NAME, DATA_CAPTURE_IARM_EVENT_AUDIO_CLIP_READY, iarmEventHandler));
             }
         }
 
@@ -141,7 +103,6 @@ namespace WPEFramework
 	   if(Utils::IARM::isConnected())
             {
                     //IARM_Result_t res;
-		    //IARM_CHECK( IARM_Bus_UnRegisterEventHandler(IARMBUS_AUDIOCAPTUREMGR_NAME, DATA_CAPTURE_IARM_EVENT_AUDIO_CLIP_READY));
             }
 
         }
@@ -194,7 +155,7 @@ namespace WPEFramework
             if (!parameters.HasLabel("enable"))
             {
                 result = false;
-                response["message"] = "please specify enable parameter";
+                response["message"] = "Please specify enable parameter";
             }
             if (result)
             {
@@ -234,32 +195,10 @@ namespace WPEFramework
 	    returnResponse(result);
         }
         
-	uint32_t AudienceIntelligence::frameSkip(const JsonObject& parameters, JsonObject& response)
-        {
-            LOGINFOMETHOD();
-	    bool result = true;
-            if (!parameters.HasLabel("value"))
-            {
-                result = false;
-                response["message"] = "please specify value parameter";
-            }
-            if (result)
-            {
-                Svalue = (unsigned int)parameters["value"].Number();
-                    if (Svalue <= 1)
-		    {
-			if(_acrClient) {
-                                _acrClient->updateframeskipvalue(Svalue);
-                        }
-                        response["message"] = "Updated frameSkip value";
-		    }
-            }
-	    returnResponse(result);
-        }
 	uint32_t AudienceIntelligence::setACRFrequency(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
-	    return 0;
+            return 1;
         }
 
 
@@ -375,230 +314,6 @@ namespace WPEFramework
                 returnResponse(ret);
         }
 
-        /*void AudienceIntelligence::get_suffix()
-        {  
-	        std::ostringstream stream;
-	        stream << ticker++;
-                stream << ".wav";
-	        std::string outstring = stream.str();
-	        return outstring;
-        }*/        
- 	
-	void open_session()
-	{
-		iarmbus_acm_arg_t param;
-		param.details.arg_open.source = 0; //primary
-				param.details.arg_open.output_type = BUFFERED_FILE_OUTPUT;
-				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_OPEN, (void *) &param, sizeof(param));
-				if(!verify_result(ret, param))
-				{
-				     LOGINFO(" Unknown input!");
-				}
-				session = param.session_id;
-				LOGINFO("Opened new session");
-
-
-	} 
-
-        void get_default_props()
-{
-		iarmbus_acm_arg_t param;
-	        param.session_id = session;
-				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_GET_DEFAULT_AUDIO_PROPS, (void *) &param, sizeof(param));
-				if(!verify_result(ret, param))
-				{
-				     LOGINFO(" Unknown input!");
-				}
-				LOGINFO("Format: 0x%x, delay comp: %dms, fifo size: %d, threshold: %d\n", 
-						param.details.arg_audio_properties.format,
-						param.details.arg_audio_properties.delay_compensation_ms,
-						param.details.arg_audio_properties.fifo_size,
-						param.details.arg_audio_properties.threshold);
-				props = param.details.arg_audio_properties;
-
-}
-
-	void set_audio_props()
-{
-		iarmbus_acm_arg_t param;
-		param.session_id = session;
-				param.details.arg_audio_properties = props;
-				param.details.arg_audio_properties.delay_compensation_ms = 190;
-				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_SET_AUDIO_PROPERTIES, (void *) &param, sizeof(param));
-				if(!verify_result(ret, param))
-				{
-				     LOGINFO(" Unknown input!");
-				}
-
-}
-
-        void get_output_props()
-{
-		iarmbus_acm_arg_t param;
-		param.session_id = session;
-				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_GET_OUTPUT_PROPS, (void *) &param, sizeof(param));
-				if(!verify_result(ret, param))
-				{
-				     LOGINFO(" Unknown input!");
-				}
-				socket_path = std::string(param.details.arg_output_props.output.file_path);
-				std::cout<<"Output path is "<<socket_path<<std::endl;
-				 //LOGINFO("Output path is %s\n", socket_path);
-
-}
-
-void * read_thread(void * data)
-{
-	std::string socket_path = *(static_cast <std::string *> (data));
-	if(socket_path.empty())
-	{
-		std::cout<<"read thread returning as socket path is empty.\n";
-		return NULL;
-	}
-	std::cout<<"Connecting to socket "<<socket_path<<std::endl;
-	struct sockaddr_un addr;
-	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, socket_path.c_str(), (socket_path.size() + 1));
-	int read_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-	if(0 > read_fd)
-	{
-		std::cout<<"Couldn't create read socket. Exiting.\n";
-		return NULL;
-	}
-	if(0 != connect(read_fd, (const struct sockaddr *) &addr, sizeof(addr)))
-	{
-		std::cout<<"Couldn't connect to the path. Exiting.\n";
-		perror("read_thread");
-		close(read_fd);
-		return NULL;
-	}
-	std::cout<<"Connection established.\n";
-	unsigned int recvd_bytes = 0;
-	char buffer[1024];
-	std::string filename = "/opt/acm_ipout_dump_";
-	filename += instance_name;
-	std::ofstream file_dump(filename.c_str(), std::ios::binary);
-	while(true)
-	{
-		int ret = read(read_fd, buffer, 1024);
-		if(0 == ret)
-		{
-			std::cout<<"Zero bytes read. Exiting.\n";
-			break;
-		}
-		else if(0 > ret)
-		{
-			std::cout<<"Error reading from socket. Exiting.\n";
-			perror("read error");
-			break;
-		}
-		if((1024*1024*2) > recvd_bytes) //Write up to 2 MB to a file
-		{
-			file_dump.write(buffer, ret);
-		}
-		recvd_bytes += ret;
-	}
-
-	close(read_fd);
-	LOGINFO("Number of bytes read: %d",recvd_bytes);
-	file_dump.seekp(0, std::ios_base::end);
-	std::cout<<file_dump.tellp()<<" bytes written to file.\n";
-//	std::cout<<"Exiting read thread.\n";
-	return NULL;
-}
-
-void connect_and_read_data(std::string &socket_path)
-{
-	pthread_t thread;
-	int ret = pthread_create(&thread, NULL, read_thread, (void *) &socket_path);
-	if(0 == ret)
-	{
-		LOGINFO("Successfully launched read thread.\n");
-	}
-	else
-	{
-		LOGINFO("Failed to launch read thread.\n");
-	}
-}
-void start_capture()
-{
-		iarmbus_acm_arg_t param;
-			if(socket_path.empty())
-				{
-					LOGINFO("No path to socket available.\n");
-				}
-				LOGINFO("Launching read thread.\n");
-				connect_and_read_data(socket_path);
-				param.session_id = session;
-				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_START, (void *) &param, sizeof(param));
-				if(!verify_result(ret, param))
-				{
-				     LOGINFO(" Unknown input!");
-				}
-				LOGINFO("Start procedure complete.\n");
-
-}
-
-void stop_capture()
-{
-		iarmbus_acm_arg_t param;
-			param.session_id = session;
-				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_STOP, (void *) &param, sizeof(param));
-				if(!verify_result(ret, param))
-				{
-				     LOGINFO(" Unknown input!");
-				}
-				LOGINFO("Stop procedure complete.\n");
-
-}
-
-void close_session()
-{
-		iarmbus_acm_arg_t param;
-			param.session_id = session;
-				ret = IARM_Bus_Call(IARMBUS_AUDIOCAPTUREMGR_NAME, IARMBUS_AUDIOCAPTUREMGR_CLOSE, (void *) &param, sizeof(param));
-				if(!verify_result(ret, param))
-				{
-				     LOGINFO(" Unknown input!");
-				}
-				LOGINFO("Close procedure complete.\n");
-				session = -1;
-				socket_path.clear();
-				keep_running = false;
-}
-
-
-
-	uint32_t AudienceIntelligence::CaptureAudio(const JsonObject& parameters, JsonObject& response)
-        {
-	    LOGINFOMETHOD();
-	    bool result = true;
-            if (!parameters.HasLabel("enable"))
-            {
-                result = false;
-                response["message"] = "please specify enable parameter";
-            }
-
-            if (result)
-            {
-                bool status = parameters["enable"].Boolean();
-                if (status)
-                {
-	          open_session();
-                  get_default_props();
-                  set_audio_props();
-	          get_output_props();
-	          start_capture();
-	        }
-		else
-		{
-                  stop_capture();
-	          close_session();
-		}
-	    }
-	    returnResponse(result);
-        }
-
  	void AudienceIntelligence::notify(const std::string& event, const JsonObject& parameters)
         {
                 string property_name = parameters["propertyName"].String();
@@ -617,8 +332,6 @@ void close_session()
             Unregister("setLogLevel");
             Unregister("enableLAR");
             Unregister("enableACR");
-            Unregister("frameSkip");
-            Unregister("CaptureAudio");
             Unregister("setACRFrequency");
 	    Unregister("registerListeners");
 	    Unregister("unregisterListeners");
