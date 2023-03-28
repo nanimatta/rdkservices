@@ -380,17 +380,17 @@ namespace WPEFramework
         }
 
 
-	void AudienceIntelligenceListener::onCLDSignatureEvent(const std::string& event,uint64_t epochts,unsigned int is_interlaced,unsigned int frame_rate,unsigned int pic_width,unsigned int pic_height,int frame_skip)
+	void AudienceIntelligenceListener::onCLDSignatureEvent(const std::string& event,uint64_t epochts)
         {
                 LOGINFO("CLD event at Audience Intelligence Plugin :%s \n",event.c_str());
 
                 JsonObject params;
 		params.FromString(event);
 		params["timestamp"] = epochts;
-		params["is_interlaced"] = is_interlaced;
-                params["pic_width"]     = pic_width;
-                params["pic_height"]    = pic_height;
-                params["frame_skip"]    = frame_skip;
+		//params["is_interlaced"] = is_interlaced;
+                //params["pic_width"]     = pic_width;
+                //params["pic_height"]    = pic_height;
+                //params["frame_skip"]    = frame_skip;
                 acrevents_arr.Add(params);
 		if(acrevents_arr.Length() == 4)
 		{

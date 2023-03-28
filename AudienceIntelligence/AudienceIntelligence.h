@@ -33,7 +33,7 @@ namespace WPEFramework {
          public:
                 AudienceIntelligenceListener(AudienceIntelligence* audintelligence);
                 ~AudienceIntelligenceListener();
-                virtual void onCLDSignatureEvent(const std::string& event,uint64_t epochts,unsigned int is_interlaced,unsigned int frame_rate,unsigned int pic_width,unsigned int pic_height,int frame_skip);
+                virtual void onCLDSignatureEvent(const std::string& event,uint64_t epochts);
 		//TODO add method to receive LAR Events
          private:
                 AudienceIntelligence& maudintelligence;
