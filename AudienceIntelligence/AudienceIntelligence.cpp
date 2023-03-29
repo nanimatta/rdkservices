@@ -31,6 +31,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <syscall.h>
+#include <curl/curl.h>
 
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 0
@@ -40,6 +41,36 @@ bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
 int Svalue = 0;
 JsonArray acrevents_arr;
+JsonObject sendacr = {
+            "account_id": "1234559232997869257",
+            "app_name": "acr",
+            "app_ver": "1.0",
+            "device_id": "1234645798406437895",
+            "device_language": "eng",
+            "device_model": "TCHxi6",
+            "device_timezone": -14400000,
+            "event_id": "5e5e386a-e5cb-11ec-8fea-0242ac120002",
+            "event_name": "acr_event",
+            "event_payload": {
+                  "acr_signatures": [],
+                     "context": {
+                        "hdmi_input": "none",
+                        "station_id": "",
+                        "tune_type": "",
+                        "viewing_mode": "",
+                        "program_title": "",
+                        "program_id": "",
+                        "program_start_time": 0,
+                        "tune_time": 0
+                        },
+                   "ip_address": "0.0.0.0"
+                     },
+           "event_schema": "acr/acr_event/2",
+           "os_ver": "Nill",
+           "partner_id": "comcast",
+           "platform": "flex",
+           "session_id": "1234e567-e89b-12d3-a456-426614174000",
+           "timestamp": 0 };
 
 using namespace std;
 namespace WPEFramework
@@ -380,26 +411,28 @@ namespace WPEFramework
         }
 
 
-	void AudienceIntelligenceListener::onCLDSignatureEvent(const std::string& event,uint64_t epochts)
+	void AudienceIntelligenceListener::onCLDSignatureEvent(const std::string& event,uint64_t epochts,,unsigned int is_interlaced,unsigned int frame_rate,unsigned int pic_width,unsigned int pic_height,int frame_skip)
         {
                 LOGINFO("CLD event at Audience Intelligence Plugin :%s \n",event.c_str());
 
                 JsonObject params;
 		params.FromString(event);
 		params["timestamp"] = epochts;
-		//params["is_interlaced"] = is_interlaced;
-                //params["pic_width"]     = pic_width;
-                //params["pic_height"]    = pic_height;
-                //params["frame_skip"]    = frame_skip;
+		params["is_interlaced"] = is_interlaced;
+                params["pic_width"]     = pic_width;
+                params["pic_height"]    = pic_height;
+                params["frame_skip"]    = frame_skip;
                 acrevents_arr.Add(params);
 		if(acrevents_arr.Length() == 4)
 		{
-                	//string json;
+			string json;
                 	JsonObject acrevent;
 			acrevent["propertyName"]=ACR_EVENTS;
 			acrevent["acr_signatures"] = acrevents_arr;		
-			//acrevent.ToString(json);
-                	//LOGINFO("NOTIFY json is %s\n",json.c_str());
+			//sendacr["acr_signatures"] = acrevents_arr;
+			acrevent.ToString(json);
+			LOGINFO("%s: NOTIFY json is %s\n", __FUNCTION__, json.c_str());
+			LOGINFO("%s: sendacr is %s\n", __FUNCTION__, sendacr);
                 	maudintelligence.notify("onacrevent",acrevent);
 			acrevents_arr.Clear();
 			LOGINFO(" length of acrevents_arr now %d \n",acrevents_arr.Length());
