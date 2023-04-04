@@ -41,7 +41,9 @@ bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
 int Svalue = 0;
 JsonArray acrevents_arr;
-/*JsonObject sendacr = {"account_id": "1234559232997869257","app_name": "acr","app_ver": "1.0","device_id": "1234645798406437895","device_language": "eng","device_model": "TCHxi6","device_timezone": -14400000,"event_id": "5e5e386a-e5cb-11ec-8fea-0242ac120002","event_name": "acr_event","event_payload": {"acr_signatures": [],"context": {"hdmi_input": "none","station_id": "","tune_type": "","viewing_mode": "","program_title": "","program_id": "","program_start_time": 0,"tune_time": 0},"ip_address": "0.0.0.0"},"event_schema": "acr/acr_event/2","os_ver": "Nill","partner_id": "comcast","platform": "flex","session_id": "1234e567-e89b-12d3-a456-426614174000","timestamp": 0};*/
+JsonArray event_payload;
+JsonObject context;
+JsonObject sendacr;
 
 using namespace std;
 namespace WPEFramework
@@ -394,6 +396,38 @@ namespace WPEFramework
                 params["pic_height"]    = pic_height;
                 params["frame_skip"]    = frame_skip;
                 acrevents_arr.Add(params);
+
+		sendacr["account_id"] = "1234559232997869257";
+		sendacr["app_name"] = "acr";
+		sendacr["app_ver"] = "1.0";
+		sendacr["device_id"] = "1234645798406437895";
+		sendacr["device_language"] = "eng";
+		sendacr["device_model"] = "TCHxi6";
+		sendacr["device_timezone"] = -14400000;
+		sendacr["event_id"] = "5e5e386a-e5cb-11ec-8fea-0242ac120002";
+		sendacr["event_name"] = "acr_event";
+		sendacr["event_schema"] = "acr/acr_event/2";
+		sendacr["os_ver"] = "TX061AEI_VBN_23Q1_sprint_20230328150607sdy_ACR_xi6";
+		sendacr["partner_id"] = "comcast";
+		sendacr["platform"] = "flex";
+		sendacr["session_id"] = "1234e567-e89b-12d3-a456-426614174000";
+		sendacr["timestamp"] = epochts;
+                context["hdmi_input"] = "none"; 
+                context["station_id"] = "none"; 
+                context["tune_type"] = "none"; 
+                context["viewing_mode"] = "none"; 
+                context["program_title"] = "none"; 
+                context["program_id"] = "none"; 
+                context["program_start_time"] = "none"; 
+                context["tune_time"] = "none"; 
+                event_payload["acr_signatures"] =  acrevents_arr;
+                event_payload["context"] =  context;
+                event_payload["ip_address"] = "1.2.3.4"; 
+		sendacr["event_payload"] = event_payload;
+                string acrjson;
+                sendacr.ToString(acrjson);
+		LOGINFO("%s: sendacr is %s\n", __FUNCTION__, acrjson.c_str());
+
 		if(acrevents_arr.Length() == 4)
 		{
 			string json;
