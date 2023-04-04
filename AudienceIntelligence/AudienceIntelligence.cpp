@@ -37,7 +37,7 @@ bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
 int Svalue = 0;
 JsonArray acrevents_arr;
-sonArray event_payload;
+JsonObject payload;
 JsonObject context;
 JsonObject sendacr;
 
@@ -385,10 +385,10 @@ namespace WPEFramework
                 context["program_id"] = "none";
                 context["program_start_time"] = "none";
                 context["tune_time"] = "none";
-                event_payload["acr_signatures"] =  acrevents_arr;
-                event_payload["context"] =  context;
-                event_payload["ip_address"] = "1.2.3.4";
-		sendacr["event_payload"] = event_payload;
+                payload["acr_signatures"] =  acrevents_arr;
+                payload["context"] =  context;
+                payload["ip_address"] = "1.2.3.4";
+		sendacr["event_payload"] = payload;
                 string acrjson;
                 sendacr.ToString(acrjson);
 		LOGINFO("%s: sendacr is %s\n", __FUNCTION__, acrjson.c_str());
