@@ -41,7 +41,7 @@ bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
 int Svalue = 0;
 JsonArray acrevents_arr;
-JsonArray event_payload;
+JsonObject payload;
 JsonObject context;
 JsonObject sendacr;
 
@@ -54,6 +54,7 @@ namespace WPEFramework
 	SERVICE_REGISTRATION(AudienceIntelligence, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 	AudienceIntelligence* AudienceIntelligence::_instance = nullptr;
 	std::vector<string> registeredEvtListeners;
+        const int curlTimeoutInSeconds = 30;
 
 	AudienceIntelligence::AudienceIntelligence()
         : PluginHost::JSONRPC(),
@@ -420,13 +421,47 @@ namespace WPEFramework
                 context["program_id"] = "none"; 
                 context["program_start_time"] = "none"; 
                 context["tune_time"] = "none"; 
-                event_payload["acr_signatures"] =  acrevents_arr;
-                event_payload["context"] =  context;
-                event_payload["ip_address"] = "1.2.3.4"; 
-		sendacr["event_payload"] = event_payload;
+                payload["acr_signatures"] =  acrevents_arr;
+                payload["context"] =  context;
+                payload["ip_address"] = "1.2.3.4"; 
+		sendacr["event_payload"] = payload;
                 string acrjson;
                 sendacr.ToString(acrjson);
 		LOGINFO("%s: sendacr is %s\n", __FUNCTION__, acrjson.c_str());
+
+		long http_code = 0;
+                std::string response;
+                CURL *curl_handle = NULL;
+                CURLcode res = CURLE_OK;
+                curl_handle = curl_easy_init();
+                //create header
+                struct curl_slist *chunk = NULL;
+                chunk = curl_slist_append(chunk, "Content-Type: application/json");
+
+                if (curl_handle) {
+
+		   LOGINFO("%s: acr entered curl \n", __FUNCTION__);
+                   curl_easy_setopt(curl_handle, CURLOPT_URL, "https://collector.pabs.comcast.com/acr/dev");
+		   curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, chunk);
+                   curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, acrjson.c_str());
+                   curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, acrjson.size());
+		   curl_easy_setopt(curl_handle, CURLOPT_POST, 1);
+                   curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1); //when redirected, follow the redirections
+                   curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, NULL);
+                   curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
+                   curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, curlTimeoutInSeconds);
+
+                   res = curl_easy_perform(curl_handle);
+		   LOGINFO("%s: acr sent curl \n", __FUNCTION__);
+                   curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
+
+                   LOGWARN("Perfomed acr curl call : %d http response: %s code: %ld error:'%s'", res, response.c_str(), http_code, curl_easy_strerror(res));
+                   curl_easy_cleanup(curl_handle);
+            }
+            else {
+                LOGWARN("Could not perform acr curl ");
+            }
+
 
 		if(acrevents_arr.Length() == 4)
 		{
