@@ -56,6 +56,11 @@ namespace WPEFramework
 	std::vector<string> registeredEvtListeners;
         const int curlTimeoutInSeconds = 30;
 
+	static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
+        {
+          ((std::string*)userp)->append((char*)contents, size * nmemb);
+          return size * nmemb;
+        }
 	AudienceIntelligence::AudienceIntelligence()
         : PluginHost::JSONRPC(),
 	_acrEventListener(nullptr)
@@ -428,6 +433,8 @@ namespace WPEFramework
                 string acrjson;
                 sendacr.ToString(acrjson);
 		LOGINFO("%s: sendacr is %s\n", __FUNCTION__, acrjson.c_str());
+                string ajson = "'[" + acrjson + "]'";
+		LOGINFO("%s: sendacr final is %s\n", __FUNCTION__, ajson.c_str());
 
 		long http_code = 0;
                 std::string response;
@@ -443,11 +450,11 @@ namespace WPEFramework
 		   LOGINFO("%s: acr entered curl \n", __FUNCTION__);
                    curl_easy_setopt(curl_handle, CURLOPT_URL, "https://collector.pabs.comcast.com/acr/dev");
 		   curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, chunk);
-                   curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, acrjson.c_str());
-                   curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, acrjson.size());
+                   curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, ajson.c_str());
+                   curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, ajson.size());
 		   curl_easy_setopt(curl_handle, CURLOPT_POST, 1);
                    curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1); //when redirected, follow the redirections
-                   curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, NULL);
+                   curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteCallback);
                    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
                    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, curlTimeoutInSeconds);
 
