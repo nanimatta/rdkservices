@@ -61,6 +61,25 @@ namespace WPEFramework
           ((std::string*)userp)->append((char*)contents, size * nmemb);
           return size * nmemb;
         }
+
+ 	static int CurlDebugCallback(CURL* handle, curl_infotype type, char *data, size_t size, void *userp)
+        {
+	   (void)handle;
+	   (void)userp;
+ 
+	   LOGINFO("%s: acr curl-handle= %u \n", __FUNCTION__, (unsigned int)handle);
+           switch(type)
+          {
+            case CURLINFO_TEXT:
+	    LOGINFO("%s: acr curl = %s \n", __FUNCTION__, data);
+            return 0;
+            break;
+            default:
+            break; 
+          }
+	          return 0;
+        }
+
 	AudienceIntelligence::AudienceIntelligence()
         : PluginHost::JSONRPC(),
 	_acrEventListener(nullptr)
@@ -455,6 +474,8 @@ namespace WPEFramework
 		   curl_easy_setopt(curl_handle, CURLOPT_POST, 1);
                    curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1); //when redirected, follow the redirections
                    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteCallback);
+	           curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1);
+                   curl_easy_setopt(curl_handle, CURLOPT_DEBUGFUNCTION, CurlDebugCallback);
                    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
                    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, curlTimeoutInSeconds);
 
