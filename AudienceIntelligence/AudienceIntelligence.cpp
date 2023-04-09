@@ -37,6 +37,7 @@
 #define API_VERSION_NUMBER_MINOR 0
 #define API_VERSION_NUMBER_PATCH 0
 
+using namespace std;
 bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
 int Svalue = 0;
@@ -44,8 +45,11 @@ JsonArray acrevents_arr;
 JsonObject payload;
 JsonObject context;
 JsonObject sendacr;
+string astart = "curl -s -H \"Content-Type: application/json\" --request POST --data ";
+string alast = " https://collector.pabs.comcast.com/acr/dev > /tmp/siftResponse.log";
+string siftRet;
+string fwver;
 
-using namespace std;
 namespace WPEFramework
 {
     namespace Plugin
@@ -56,28 +60,17 @@ namespace WPEFramework
 	std::vector<string> registeredEvtListeners;
         const int curlTimeoutInSeconds = 30;
 
-	static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
+	bool getSiftResponse(std::string fileName, std::string& fileContent)
         {
-          ((std::string*)userp)->append((char*)contents, size * nmemb);
-          return size * nmemb;
-        }
+             std::ifstream inFile(fileName.c_str(), ios::in);
+             if (!inFile.is_open()) return false;
 
- 	static int CurlDebugCallback(CURL* handle, curl_infotype type, char *data, size_t size, void *userp)
-        {
-	   (void)handle;
-	   (void)userp;
- 
-	   LOGINFO("%s: acr curl-handle= %u \n", __FUNCTION__, (unsigned int)handle);
-           switch(type)
-          {
-            case CURLINFO_TEXT:
-	    LOGINFO("%s: acr curl = %s \n", __FUNCTION__, data);
-            return 0;
-            break;
-            default:
-            break; 
-          }
-	          return 0;
+             std::stringstream buffer;
+             buffer << inFile.rdbuf();
+             fileContent = buffer.str();
+             inFile.close();
+
+             return true;
         }
 
 	AudienceIntelligence::AudienceIntelligence()
@@ -422,6 +415,9 @@ namespace WPEFramework
                 params["frame_skip"]    = frame_skip;
                 acrevents_arr.Add(params);
 
+		system("cat /version.txt | grep \"imagename\" | cut -d ':' -f 2 > /tmp/siftResponse.log");
+	        getSiftResponse("/tmp/siftResponse.log", fwver);
+
 		sendacr["account_id"] = "1234559232997869257";
 		sendacr["app_name"] = "acr";
 		sendacr["app_ver"] = "1.0";
@@ -432,7 +428,7 @@ namespace WPEFramework
 		sendacr["event_id"] = "5e5e386a-e5cb-11ec-8fea-0242ac120002";
 		sendacr["event_name"] = "acr_event";
 		sendacr["event_schema"] = "acr/acr_event/2";
-		sendacr["os_ver"] = "TX061AEI_VBN_23Q1_sprint_20230328150607sdy_ACR_xi6";
+		sendacr["os_ver"] = fwver;
 		sendacr["partner_id"] = "comcast";
 		sendacr["platform"] = "flex";
 		sendacr["session_id"] = "1234e567-e89b-12d3-a456-426614174000";
@@ -445,64 +441,29 @@ namespace WPEFramework
                 context["program_id"] = "none"; 
                 context["program_start_time"] = "none"; 
                 context["tune_time"] = "none"; 
-                payload["acr_signatures"] =  acrevents_arr;
-                payload["context"] =  context;
-                payload["ip_address"] = "1.2.3.4"; 
-		sendacr["event_payload"] = payload;
-                string acrjson;
-                sendacr.ToString(acrjson);
-		LOGINFO("%s: sendacr is %s\n", __FUNCTION__, acrjson.c_str());
-                string ajson = "'[" + acrjson + "]'";
-		LOGINFO("%s: sendacr final is %s\n", __FUNCTION__, ajson.c_str());
-
-		long http_code = 0;
-                std::string response;
-                CURL *curl_handle = NULL;
-                CURLcode res = CURLE_OK;
-                curl_handle = curl_easy_init();
-                //create header
-                struct curl_slist *chunk = NULL;
-                chunk = curl_slist_append(chunk, "Content-Type: application/json");
-
-                if (curl_handle) {
-
-		   LOGINFO("%s: acr entered curl \n", __FUNCTION__);
-                   curl_easy_setopt(curl_handle, CURLOPT_URL, "https://collector.pabs.comcast.com/acr/dev");
-		   curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, chunk);
-                   curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, ajson.c_str());
-                   curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE, ajson.size());
-		   curl_easy_setopt(curl_handle, CURLOPT_POST, 1);
-                   curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1); //when redirected, follow the redirections
-                   curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteCallback);
-	           curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1);
-                   curl_easy_setopt(curl_handle, CURLOPT_DEBUGFUNCTION, CurlDebugCallback);
-                   curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &response);
-                   curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, curlTimeoutInSeconds);
-
-                   res = curl_easy_perform(curl_handle);
-		   LOGINFO("%s: acr sent curl \n", __FUNCTION__);
-                   curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &http_code);
-
-                   LOGWARN("Perfomed acr curl call : %d http response: %s code: %ld error:'%s'", res, response.c_str(), http_code, curl_easy_strerror(res));
-                   curl_easy_cleanup(curl_handle);
-            }
-            else {
-                LOGWARN("Could not perform acr curl ");
-            }
-
 
 		if(acrevents_arr.Length() == 4)
 		{
+                        payload["acr_signatures"] =  acrevents_arr;
+                        payload["context"] =  context;
+                        payload["ip_address"] = "1.2.3.4";
+		        sendacr["event_payload"] = payload;
+                        string acrjson;
+                        sendacr.ToString(acrjson);
+                        string ajson = "'[" + acrjson + "]'";
+                        string acurl = astart + ajson + alast;
+		        fflush(stdout);
+                        system(acurl.c_str());
+		        LOGINFO("acr_event_sent_to_sift_server : %s\n", acurl.c_str());
+			getSiftResponse("/tmp/siftResponse.log", siftRet);
+		        LOGINFO("acr_event_sift_response: %s\n", siftRet.c_str());
+
 			string json;
-			//string ajson;
                 	JsonObject acrevent;
 			acrevent["propertyName"]=ACR_EVENTS;
 			acrevent["acr_signatures"] = acrevents_arr;		
-			//sendacr["acr_signatures"] = acrevents_arr;
 			acrevent.ToString(json);
-			//sendacr.ToString(ajson);
 			LOGINFO("%s: NOTIFY json is %s\n", __FUNCTION__, json.c_str());
-			//LOGINFO("%s: sendacr is %s\n", __FUNCTION__, ajson.c_str());
                 	maudintelligence.notify("onacrevent",acrevent);
 			acrevents_arr.Clear();
 			LOGINFO(" length of acrevents_arr now %d \n",acrevents_arr.Length());

@@ -76,12 +76,12 @@ namespace WPEFramework {
             void notify(const std::string& event, const JsonObject& parameters); 
             AudienceIntelligenceListener *_acrEventListener;
             ACRClient *_acrClient;
- 
+
 	    static AudienceIntelligence* _instance;
             virtual const string Initialize(PluginHost::IShell* service) override;
             virtual void Deinitialize(PluginHost::IShell* service) override;
+	    bool getSiftResponse(std::string fileName, std::string& fileContent);
             virtual string Information() const override;
-            static int CurlDebugCallback(CURL* handle, curl_infotype type, char *data, size_t size, void *userp);
             BEGIN_INTERFACE_MAP(AudienceIntelligence)
             INTERFACE_ENTRY(PluginHost::IPlugin)
             INTERFACE_ENTRY(PluginHost::IDispatcher)
