@@ -21,6 +21,8 @@
 
 #include "Module.h"
 #include "acrclient.h"
+#include <curl/curl.h>
+
 namespace WPEFramework {
 
     namespace Plugin {
@@ -74,12 +76,12 @@ namespace WPEFramework {
             void notify(const std::string& event, const JsonObject& parameters); 
             AudienceIntelligenceListener *_acrEventListener;
             ACRClient *_acrClient;
- 
+
 	    static AudienceIntelligence* _instance;
             virtual const string Initialize(PluginHost::IShell* service) override;
             virtual void Deinitialize(PluginHost::IShell* service) override;
+	    bool getSiftResponse(std::string fileName, std::string& fileContent);
             virtual string Information() const override;
-
             BEGIN_INTERFACE_MAP(AudienceIntelligence)
             INTERFACE_ENTRY(PluginHost::IPlugin)
             INTERFACE_ENTRY(PluginHost::IDispatcher)

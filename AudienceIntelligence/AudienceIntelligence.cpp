@@ -18,8 +18,10 @@
 **/
 #include <cjson/cJSON.h>
 #include "AudienceIntelligence.h"
+
 #include "UtilsJsonRpc.h"
 #include "UtilsIarm.h"
+
 #include <string>
 #include <memory>
 #include <iostream>
@@ -30,9 +32,12 @@
 #include <unistd.h>
 #include <syscall.h>
 #include <curl/curl.h>
+
 #define API_VERSION_NUMBER_MAJOR 1
 #define API_VERSION_NUMBER_MINOR 0
 #define API_VERSION_NUMBER_PATCH 0
+
+using namespace std;
 bool ACRModeEnabled = true;
 bool LARModeEnabled = true;
 int Svalue = 0;
@@ -40,29 +45,51 @@ JsonArray acrevents_arr;
 JsonObject payload;
 JsonObject context;
 JsonObject sendacr;
+string astart = "curl -s -H \"Content-Type: application/json\" --request POST --data ";
+string alast = " https://collector.pabs.comcast.com/acr/dev > /tmp/siftResponse.log";
+string siftRet;
+string fwver;
 
-using namespace std;
 namespace WPEFramework
 {
     namespace Plugin
     {
+
 	SERVICE_REGISTRATION(AudienceIntelligence, API_VERSION_NUMBER_MAJOR, API_VERSION_NUMBER_MINOR, API_VERSION_NUMBER_PATCH);
 	AudienceIntelligence* AudienceIntelligence::_instance = nullptr;
 	std::vector<string> registeredEvtListeners;
+        const int curlTimeoutInSeconds = 30;
+
+	bool getSiftResponse(std::string fileName, std::string& fileContent)
+        {
+             std::ifstream inFile(fileName.c_str(), ios::in);
+             if (!inFile.is_open()) return false;
+
+             std::stringstream buffer;
+             buffer << inFile.rdbuf();
+             fileContent = buffer.str();
+             inFile.close();
+
+             return true;
+        }
+
 	AudienceIntelligence::AudienceIntelligence()
         : PluginHost::JSONRPC(),
 	_acrEventListener(nullptr)
         {
 	    LOGINFO("ctor");
+
             Register("getLogLevel", &AudienceIntelligence::getLogLevelWrapper, this);
             Register("setLogLevel", &AudienceIntelligence::setLogLevelWrapper, this);
             Register("enableLAR", &AudienceIntelligence::enableLAR, this);
             Register("enableACR", &AudienceIntelligence::enableACR, this);
 	    Register("frameSkip", &AudienceIntelligence::frameSkip, this);
             Register("setACRFrequency", &AudienceIntelligence::setACRFrequency, this);
+
 	    Register("registerListeners",&AudienceIntelligence::registerListeners, this);  //Register ACRLAR Events
 	    Register("unregisterListeners",&AudienceIntelligence::unregisterListeners, this);
         }
+
 	const string AudienceIntelligence::Initialize(PluginHost::IShell* service)
         {
 	    LOGWARN("Initlaizing AudienceIntelligence");
@@ -72,16 +99,19 @@ namespace WPEFramework
             InitializeIARM();
             return (string());
         }
+
 	void AudienceIntelligence::Deinitialize(PluginHost::IShell * /* service */)
         {
 	    LOGWARN("DeInitlaizing AudienceIntelligence");
             DeinitializeIARM();
             AudienceIntelligence::_instance = nullptr;
         }
+
         string AudienceIntelligence::Information() const
         {
             return (string());
         }
+
 	void AudienceIntelligence::InitializeIARM()
         {
            LOGWARN("AudienceIntelligence::InitializeIARM");
@@ -90,6 +120,7 @@ namespace WPEFramework
        //             IARM_Result_t res;
             }
         }
+
        void AudienceIntelligence::DeinitializeIARM()
         {
            LOGWARN("AudienceIntelligence::DeinitializeIARM");
@@ -97,7 +128,9 @@ namespace WPEFramework
             {
             //        IARM_Result_t res;
             }
+
         }
+
 	// Registered methods begin
         uint32_t AudienceIntelligence::getLogLevelWrapper(const JsonObject& parameters, JsonObject& response)
         {
@@ -142,6 +175,7 @@ namespace WPEFramework
         {
             LOGINFOMETHOD();
 	    bool result = true;
+
             if (!parameters.HasLabel("enable"))
             {
                 result = false;
@@ -168,6 +202,7 @@ namespace WPEFramework
         {
             LOGINFOMETHOD();
 	    bool result = true;
+
             if (!parameters.HasLabel("enable"))
             {
                 result = false;
@@ -206,14 +241,18 @@ namespace WPEFramework
             }
 	    returnResponse(result);
         }
+
 	uint32_t AudienceIntelligence::setACRFrequency(const JsonObject& parameters, JsonObject& response)
         {
             LOGINFOMETHOD();
 		return 0;
         }
+
+
 	uint32_t AudienceIntelligence::registerListeners(const JsonObject& parameters, JsonObject& response)
         {
                 LOGINFOMETHOD();
+
                 bool ret=false;
                 string json;
                 std::vector<string>::iterator it;
@@ -251,8 +290,10 @@ namespace WPEFramework
                                 acrlarevent["propertyName"] = evt_str;
                                 response_arr.Add(acrlarevent);
                          }
+
                          for( it = eventname.begin(); it!= eventname.end(); ++it )
                          {
+
                                 if (std::find(registeredEvtListeners.begin(), registeredEvtListeners.end(), *it) == registeredEvtListeners.end())
                                 {
                                         LOGINFO("Event being added to listeners %s",it->c_str());
@@ -265,11 +306,13 @@ namespace WPEFramework
                          /*string json_str;
                          response.ToString(json_str);
                          LOGINFO("json array of properties is %s\n",json_str.c_str());*/
+
                 }
                 LOGTRACEMETHODFIN();
                 cJSON_Delete(root);
                 returnResponse(ret);
         }
+
 	 uint32_t AudienceIntelligence::unregisterListeners(const JsonObject& parameters, JsonObject& response)
         {
                 LOGINFOMETHOD();
@@ -317,16 +360,20 @@ namespace WPEFramework
                 cJSON_Delete(root);
                 returnResponse(ret);
         }
+
+
  	void AudienceIntelligence::notify(const std::string& event, const JsonObject& parameters)
         {
                 string property_name = parameters["propertyName"].String();
 		LOGINFO(" event notification : %s  propertyname : %s \n",event.c_str(),property_name.c_str());
                 if(std::find(registeredEvtListeners.begin(), registeredEvtListeners.end(), property_name) != registeredEvtListeners.end())
                 {
+
 			 LOGINFO(" Property registered notifying the events \n");
                         sendNotify(event.c_str(),parameters);
                 }
 	}
+
 	AudienceIntelligence::~AudienceIntelligence()
 	{
             Unregister("getLogLevel");
@@ -341,7 +388,9 @@ namespace WPEFramework
             _acrEventListener = nullptr;
             delete _acrClient;
             _acrClient = nullptr;
+
        }
+
 	AudienceIntelligenceListener::AudienceIntelligenceListener(AudienceIntelligence* audintelligence)
                         : maudintelligence(*audintelligence)
         {
@@ -351,9 +400,12 @@ namespace WPEFramework
         {
 		LOGINFO("Destructor \n");
         }
+
+
 	void AudienceIntelligenceListener::onCLDSignatureEvent(const std::string& event,uint64_t epochts)
         {
                 LOGINFO("CLD event at Audience Intelligence Plugin :%s \n",event.c_str());
+
                 JsonObject params;
 		params.FromString(event);
 		params["timestamp"] = epochts;
@@ -362,49 +414,56 @@ namespace WPEFramework
                 //params["pic_height"]    = pic_height;
                 //params["frame_skip"]    = frame_skip;
                 acrevents_arr.Add(params);
-		sendacr["account_id"] = "1234559232997869257";
+
+		system("cat /version.txt | grep \"imagename\" | cut -d ':' -f 2 > /tmp/siftResponse.log");
+	        getSiftResponse("/tmp/siftResponse.log", fwver);
+
+		sendacr["account_id"] = "5555559232997869257";
 		sendacr["app_name"] = "acr";
 		sendacr["app_ver"] = "1.0";
-		sendacr["device_id"] = "1234645798406437895";
+		sendacr["device_id"] = "5555545798406437895";
 		sendacr["device_language"] = "eng";
-		sendacr["device_model"] = "xione-us";
+		sendacr["device_model"] = "xione";
 		sendacr["device_timezone"] = -14400000;
 		sendacr["event_id"] = "5e5e386a-e5cb-11ec-8fea-0242ac120002";
 		sendacr["event_name"] = "acr_event";
 		sendacr["event_schema"] = "acr/acr_event/2";
-		sendacr["os_ver"] = "TX061AEI_VBN_23Q1_sprint_20230328150607sdy_ACR_xi6";
+		sendacr["os_ver"] = fwver;
 		sendacr["partner_id"] = "comcast";
 		sendacr["platform"] = "flex";
 		sendacr["session_id"] = "1234e567-e89b-12d3-a456-426614174000";
 		sendacr["timestamp"] = epochts;
-                context["hdmi_input"] = "none";
-                context["station_id"] = "none";
-                context["tune_type"] = "none";
-                context["viewing_mode"] = "none";
-                context["program_title"] = "none";
-                context["program_id"] = "none";
-                context["program_start_time"] = "none";
-                context["tune_time"] = "none";
-                payload["acr_signatures"] =  acrevents_arr;
-                payload["context"] =  context;
-                payload["ip_address"] = "1.2.3.4";
-		sendacr["event_payload"] = payload;
-                string acrjson;
-                sendacr.ToString(acrjson);
-		LOGINFO("%s: sendacr is %s\n", __FUNCTION__, acrjson.c_str());
+                context["hdmi_input"] = "none"; 
+                context["station_id"] = "none"; 
+                context["tune_type"] = "none"; 
+                context["viewing_mode"] = "none"; 
+                context["program_title"] = "none"; 
+                context["program_id"] = "none"; 
+                context["program_start_time"] = "none"; 
+                context["tune_time"] = "none"; 
 
 		if(acrevents_arr.Length() == 4)
 		{
+                        payload["acr_signatures"] =  acrevents_arr;
+                        payload["context"] =  context;
+                        payload["ip_address"] = "5.6.7.8";
+		        sendacr["event_payload"] = payload;
+                        string acrjson;
+                        sendacr.ToString(acrjson);
+                        string ajson = "'[" + acrjson + "]'";
+                        string acurl = astart + ajson + alast;
+		        fflush(stdout);
+                        system(acurl.c_str());
+		        LOGINFO("acr_event_sent_to_sift_server : %s\n", acurl.c_str());
+			getSiftResponse("/tmp/siftResponse.log", siftRet);
+		        LOGINFO("acr_event_sift_response: %s\n", siftRet.c_str());
+
 			string json;
-			//string ajson;
                 	JsonObject acrevent;
 			acrevent["propertyName"]=ACR_EVENTS;
 			acrevent["acr_signatures"] = acrevents_arr;		
-			//sendacr["acr_signatures"] = acrevents_arr;
 			acrevent.ToString(json);
-			//sendacr.ToString(ajson);
 			LOGINFO("%s: NOTIFY json is %s\n", __FUNCTION__, json.c_str());
-			//LOGINFO("%s: sendacr is %s\n", __FUNCTION__, ajson.c_str());
                 	maudintelligence.notify("onacrevent",acrevent);
 			acrevents_arr.Clear();
 			LOGINFO(" length of acrevents_arr now %d \n",acrevents_arr.Length());
