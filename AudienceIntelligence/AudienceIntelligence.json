@@ -1,0 +1,155 @@
+{
+    "$schema": "https://raw.githubusercontent.com/rdkcentral/Thunder/master/Tools/JsonGenerator/schemas/interface.schema.json",
+    "jsonrpc": "2.0",
+    "info": {
+        "title": "AudienceIntelligence API",
+        "class": "AudienceIntelligence",
+        "description": "The `AudienceIntelligence` plugin provide the interfaces to applications to control the behavior of the ACR and LAR functionality."
+    },
+    "definitions": {
+        "result": {
+            "type":"object",
+            "properties": {
+                "success": {
+                    "$ref": "#/definitions/success"
+                }
+            },
+            "required": [
+                "success"
+            ]
+        },
+	"logLevel": {
+            "summary": "The log level",
+            "enum": [
+                "DEBUG",
+                "INFO",
+                "WARN",
+                "ERROR",
+                "FATAL"
+            ],
+            "type":"string",
+            "example": "INFO"
+        },
+        "success": {
+            "summary": "Whether the request succeeded",
+            "type": "boolean",
+            "example": "true"
+        }
+    },
+    "methods": {
+	    "getLogLevel": {
+            "summary": "Returns the currently set logging level",
+            "result": {
+                "type": "object",
+                "properties": {
+                    "level": {
+                        "$ref": "#/definitions/logLevel"
+                    },
+                    "success": {
+                        "$ref": "#/definitions/success"
+                    }
+                },
+                "required": [
+                    "level",
+                    "success"
+                ]
+            }
+        },
+	 "setLogLevel":{
+            "summary": "Sets the logging level",
+            "params": {
+                "type":"object",
+                "properties": {
+                    "level": {
+                        "$ref": "#/definitions/logLevel"
+                    },
+                    "success": {
+                        "$ref": "#/definitions/success"
+                    }
+                },
+                "required": [
+                    "level",
+                    "success"
+                ]
+            },
+            "result": {
+                "$ref": "#/definitions/result"
+            }
+        },
+        "enableACR":{
+            "summary": "Enables or disables ACR",
+            "params": {
+                "type":"object",
+                "properties": {
+                    "enable": {
+                        "summary": "`true` to enable or `false` to disable",
+                        "type":"boolean",
+                        "example": true
+                    }
+		},
+		"required": [
+                    "enable"
+                ]
+            },
+	    "result": {
+                "$ref": "#/definitions/result"
+            }
+         },
+	 "frameSkip":{
+            "summary": "Set frameskip value",
+            "params": {
+                "type":"object",
+                "properties": {
+                    "value": {
+                        "summary": " 0 or 1",
+                        "type":"integer",
+                        "example": 1
+                    }
+		},
+		"required": [
+                    "value"
+                ]
+            },
+	    "result": {
+                "$ref": "#/definitions/result"
+            }
+         },
+         "enableLAR":{
+            "summary": "Enables or disables LAR",
+            "params": {
+                "type":"object",
+                "properties": {
+                    "enable": {
+                        "summary": "`true` to enable or `false` to disable",
+                        "type":"boolean",
+                        "example": true
+                    }
+                },
+                "required": [
+                    "enable"
+                ]
+            },
+            "result": {
+                "$ref": "#/definitions/result"
+            }
+        },
+        "setACRFrequency":{
+            "summary": "Set ACR Frequency",
+            "params": {
+                "type":"object",
+                "properties": {
+                    "frequency": {
+                        "summary": "ACR Frequency",
+                        "type":"string",
+                        "example":"everyframe"
+                    }
+                },
+                "required": [
+                    "frequency"
+                ]
+            },
+            "result": {
+                "$ref": "#/definitions/result"
+            }
+   }
+}
