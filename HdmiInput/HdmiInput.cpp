@@ -129,7 +129,7 @@ namespace WPEFramework
             }
 
             bool success = true;
-            try
+            /*try
             {
                 device::HdmiInput::getInstance().selectPort(portId);
             }
@@ -137,7 +137,7 @@ namespace WPEFramework
             {
                 LOG_DEVICE_EXCEPTION1(sPortId);
                 success = false;
-            }
+            }*/
             returnResponse(success);
 
         }
@@ -147,7 +147,7 @@ namespace WPEFramework
             LOGINFOMETHOD();
 
             bool success = true;
-            try
+            /*try
             {
                 device::HdmiInput::getInstance().selectPort(-1);
             }
@@ -155,7 +155,7 @@ namespace WPEFramework
             {
                 LOGWARN("HdmiInputService::stopHdmiInput Failed");
                 success = false;
-            }
+            }*/
             returnResponse(success);
 
         }
