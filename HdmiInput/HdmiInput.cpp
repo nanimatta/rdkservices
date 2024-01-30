@@ -252,7 +252,7 @@ namespace WPEFramework
 		    returnResponse(false);
             }
             bool success = true;
-            try
+            /*try
             {
                 device::HdmiInput::getInstance().selectPort(portId,audioMix,planeType,topMostPlane);
             }
@@ -260,7 +260,7 @@ namespace WPEFramework
             {
                 LOG_DEVICE_EXCEPTION1(sPortId);
                 success = false;
-            }
+            }*/
             returnResponse(success);
 
         }
@@ -270,7 +270,7 @@ namespace WPEFramework
             LOGINFOMETHOD();
 
             bool success = true;
-            try
+            /*try
             {
 		planeType = -1;// plane index when stopping hdmi input
                 device::HdmiInput::getInstance().selectPort(-1);
@@ -279,7 +279,7 @@ namespace WPEFramework
             {
                 LOGWARN("HdmiInputService::stopHdmiInput Failed");
                 success = false;
-            }
+            }*/
             returnResponse(success);
 
         }
