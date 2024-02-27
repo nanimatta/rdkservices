@@ -254,9 +254,9 @@ namespace WPEFramework
             bool success = true;
             try
             {
-                LOGWARN("RDKTV-28230:: start before device::HdmiInput::getInstance().selectPort");
+                LOGWARN(" sPortId: %s Enter selectPort RDKTV-28230", sPortId.c_str());
                 device::HdmiInput::getInstance().selectPort(portId,audioMix,planeType,topMostPlane);
-                LOGWARN("RDKTV-28230:: start after device::HdmiInput::getInstance().selectPort");
+                LOGWARN(" sPortId: %s Exit selectPort RDKTV-28230", sPortId.c_str());
             }
             catch (const device::Exception& err)
             {
@@ -275,9 +275,9 @@ namespace WPEFramework
             try
             {
 		planeType = -1;// plane index when stopping hdmi input
-                LOGWARN("RDKTV-28230:: stop before device::HdmiInput::getInstance().selectPort");
+                LOGWARN(" Enter RDKTV-28230 ");
                 device::HdmiInput::getInstance().selectPort(-1);
-                LOGWARN("RDKTV-28230:: stop after device::HdmiInput::getInstance().selectPort");
+                LOGWARN(" Exit RDKTV-28230 ");
             }
             catch (const device::Exception& err)
             {
@@ -792,7 +792,7 @@ namespace WPEFramework
                 IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
                 int hdmi_in_port = eventData->data.hdmi_in_sig_status.port;
                 int hdmi_in_signal_status = eventData->data.hdmi_in_sig_status.status;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS  event  port: %d, signal status: %d", hdmi_in_port,hdmi_in_signal_status);
+                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_SIGNAL_STATUS RDKTV-28230 event  port: %d, signal status: %d", hdmi_in_port,hdmi_in_signal_status);
 
                 HdmiInput::_instance->hdmiInputSignalChange(hdmi_in_port, hdmi_in_signal_status);
 
@@ -809,7 +809,7 @@ namespace WPEFramework
                 IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
                 int hdmi_in_port = eventData->data.hdmi_in_status.port;
                 bool hdmi_in_status = eventData->data.hdmi_in_status.isPresented;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS  event  port: %d, started: %d", hdmi_in_port,hdmi_in_status);
+                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS  event RDKTV-28230 port: %d, started: %d", hdmi_in_port,hdmi_in_status);
 
                 HdmiInput::_instance->hdmiInputStatusChange(hdmi_in_port, hdmi_in_status);
 
