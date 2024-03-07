@@ -809,7 +809,7 @@ namespace WPEFramework
                 IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
                 int hdmi_in_port = eventData->data.hdmi_in_status.port;
                 bool hdmi_in_status = eventData->data.hdmi_in_status.isPresented;
-                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS  event RDKTV-28230 port: %d, started: %d", hdmi_in_port,hdmi_in_status);
+                LOGWARN("Received IARM_BUS_DSMGR_EVENT_HDMI_IN_STATUS  event RDKTV-28230  port: %d, started: %d", hdmi_in_port,hdmi_in_status);
 
                 HdmiInput::_instance->hdmiInputStatusChange(hdmi_in_port, hdmi_in_status);
 
