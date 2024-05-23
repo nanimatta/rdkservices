@@ -341,6 +341,13 @@ namespace WPEFramework {
         SystemServices* SystemServices::_instance = nullptr;
         cSettings SystemServices::m_temp_settings(SYSTEM_SERVICE_TEMP_FILE);
 
+	if (dirExists(SYSTEM_SERVICE_SETTINGS_FILE)) {
+               std::cout << "File " << SYSTEM_SERVICE_SETTINGS_FILE << " detected as folder, deleting.." << std::endl;
+               if (0 != remove(SYSTEM_SERVICE_SETTINGS_FILE)
+                       std::cout << "Error:Failed to delete " << SYSTEM_SERVICE_SETTINGS_FILE << " folder." << std::endl;
+
+       }
+
         /**
          * Register SystemService module as wpeframework plugin
          */

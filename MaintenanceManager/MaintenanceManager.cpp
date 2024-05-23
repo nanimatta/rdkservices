@@ -44,6 +44,7 @@
 #include "UtilsJsonRpc.h"
 #include "UtilscRunScript.h"
 #include "UtilsfileExists.h"
+#include "SystemServicesHelper.h"
 
 enum eRetval { E_NOK = -1,
     E_OK };
@@ -220,6 +221,12 @@ namespace WPEFramework {
         /* Global time variable */
         MaintenanceManager* MaintenanceManager::_instance = nullptr;
 
+	if (dirExists(MAINTENANCE_MGR_RECORD_FILE)) {
+		std::cout << "File " << MAINTENANCE_MGR_RECORD_FILE << " detected as folder, deleting.." << std::endl;
+		if (0 != remove(MAINTENANCE_MGR_RECORD_FILE)
+			std::cout << "Error:Failed to delete " << MAINTENANCE_MGR_RECORD_FILE << " folder." << std::endl;
+
+	}
         cSettings MaintenanceManager::m_setting(MAINTENANCE_MGR_RECORD_FILE);
 
         string task_names_foreground[]={
