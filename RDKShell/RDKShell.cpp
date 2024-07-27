@@ -4134,6 +4134,7 @@ namespace WPEFramework {
                     returnResponse(false);
                 }
             }*/
+
             if (result)
             {
                 appCallsign = parameters["callsign"].String();
